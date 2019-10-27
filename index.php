@@ -83,14 +83,14 @@ $tasks = [
 
                 <nav class="main-navigation">
                     <ul class="main-navigation__list">
-                        <?php if (count($projects)): ?>
-                            <?php foreach ($projects as $item): ?>
+                        <?php foreach ($projects as $item): ?>
+                            <?php if (isset($item)): ?>
                                 <li class="main-navigation__list-item">
                                     <a class="main-navigation__list-item-link" href="#"><?= $item; ?></a>
                                     <span class="main-navigation__list-item-count">0</span>
                                 </li>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
                     </ul>
                 </nav>
 
@@ -126,40 +126,26 @@ $tasks = [
                 </div>
 
                 <table class="tasks">
-                    <tr class="tasks__item task">
-                        <td class="task__select">
-                            <label class="checkbox task__checkbox">
-                                <input class="checkbox__input visually-hidden task__checkbox" type="checkbox" value="1">
-                                <span class="checkbox__text">Сделать главную страницу Дела в порядке</span>
-                            </label>
-                        </td>
-
-                        <td class="task__file">
-                            <a class="download-link" href="#">Home.psd</a>
-                        </td>
-
-                        <td class="task__date"></td>
-                    </tr>
-                    <?php foreach ($tasks as $key => $value): ?>
-                        <?php if (isset($value)): ?>
-                            <?php if ($show_complete_tasks == 0 && $value["completed"]): continue; ?>
+                    <?php foreach ($tasks as $item): ?>
+                        <?php if (isset($item)): ?>
+                            <?php if ($show_complete_tasks == 0 && $item["completed"]): continue; ?>
                             <?php endif; ?>
                             <tr class="tasks__item task
-                                <?php if ($value["completed"]): ?>
+                                <?php if ($item["completed"]): ?>
                                  task--completed
                                 <?php endif; ?>
                             ">
                                 <td class="task__select">
                                     <label class="checkbox task__checkbox">
                                         <input class="checkbox__input visually-hidden" type="checkbox"
-                                        <?php if ($value["completed"]): ?>
+                                        <?php if ($item["completed"]): ?>
                                          checked
                                         <?php endif; ?>
                                         >
-                                        <span class="checkbox__text"><?= $value["title"]; ?></span>
+                                        <span class="checkbox__text"><?= $item["title"]; ?></span>
                                     </label>
                                 </td>
-                                <td class="task__date"><?= $value["deadline"]; ?></td>
+                                <td class="task__date"><?= $item["deadline"]; ?></td>
                                 <td class="task__controls"></td>
                             </tr>
                         <?php endif; ?>
