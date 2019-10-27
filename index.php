@@ -84,12 +84,10 @@ $tasks = [
                 <nav class="main-navigation">
                     <ul class="main-navigation__list">
                         <?php foreach ($projects as $item): ?>
-                            <?php if (isset($item)): ?>
-                                <li class="main-navigation__list-item">
-                                    <a class="main-navigation__list-item-link" href="#"><?= $item; ?></a>
-                                    <span class="main-navigation__list-item-count">0</span>
-                                </li>
-                            <?php endif; ?>
+                            <li class="main-navigation__list-item">
+                                <a class="main-navigation__list-item-link" href="#"><?= $item; ?></a>
+                                <span class="main-navigation__list-item-count">0</span>
+                            </li>
                         <?php endforeach; ?>
                     </ul>
                 </nav>
@@ -127,28 +125,41 @@ $tasks = [
 
                 <table class="tasks">
                     <?php foreach ($tasks as $item): ?>
-                        <?php if (isset($item)): ?>
-                            <?php if ($show_complete_tasks == 0 && $item["completed"]): continue; ?>
+                        <?php if(isset ($item["completed"])): ?>
+                            <?php if ($show_complete_tasks == 0 && $item["completed"]): ?>
+                                <?php continue; ?>
                             <?php endif; ?>
+                        <?php endif; ?>
                             <tr class="tasks__item task
-                                <?php if ($item["completed"]): ?>
-                                 task--completed
+                                <?php if(isset ($item["completed"])): ?>
+                                    <?php if ($item["completed"]): ?>
+                                         task--completed
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             ">
                                 <td class="task__select">
                                     <label class="checkbox task__checkbox">
                                         <input class="checkbox__input visually-hidden" type="checkbox"
-                                        <?php if ($item["completed"]): ?>
-                                         checked
-                                        <?php endif; ?>
+                                            <?php if(isset ($item["completed"])): ?>
+                                                <?php if ($item["completed"]): ?>
+                                                     checked
+                                                <?php endif; ?>
+                                            <?php endif; ?>
                                         >
-                                        <span class="checkbox__text"><?= $item["title"]; ?></span>
+                                        <span class="checkbox__text">
+                                            <?php if(isset ($item["title"])): ?>
+                                                <?= $item["title"]; ?>
+                                            <?php endif; ?>
+                                        </span>
                                     </label>
                                 </td>
-                                <td class="task__date"><?= $item["deadline"]; ?></td>
+                                <td class="task__date">
+                                    <?php if(isset ($item["deadline"])): ?>
+                                        <?= $item["deadline"]; ?>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="task__controls"></td>
                             </tr>
-                        <?php endif; ?>
                     <?php endforeach; ?>
                 </table>
             </main>
