@@ -43,7 +43,7 @@ $tasks = [
     ]
 ];
 
-function get_project_count(array $tasks, $item) {
+function get_tasks_count_by_project(array $tasks, $item) {
     $count = 0;
 
     foreach ($tasks as $task) {
@@ -98,7 +98,7 @@ function get_project_count(array $tasks, $item) {
                         <?php foreach ($projects as $item): ?>
                             <li class="main-navigation__list-item">
                                 <a class="main-navigation__list-item-link" href="#"><?= $item; ?></a>
-                                <span class="main-navigation__list-item-count"><?= get_project_count($tasks, $item); ?></span>
+                                <span class="main-navigation__list-item-count"><?= get_tasks_count_by_project($tasks, $item); ?></span>
                             </li>
                         <?php endforeach; ?>
                     </ul>
