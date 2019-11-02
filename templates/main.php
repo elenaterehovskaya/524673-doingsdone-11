@@ -48,36 +48,33 @@
 
     <table class="tasks">
         <?php foreach ($tasks as $item): ?>
-            <?php if(isset ($item["completed"])): ?>
-                <?php if ($show_complete_tasks == 0 && $item["completed"]): ?>
-                    <?php continue; ?>
-                <?php endif; ?>
+            <?php if ($show_complete_tasks == 0 && isset($item["completed"]) && $item["completed"]): ?>
+                <?php continue; ?>
             <?php endif; ?>
             <tr class="tasks__item task
-                <?php if(isset ($item["completed"])): ?>
-                    <?php if ($item["completed"]): ?>
-                        task--completed
-                    <?php endif; ?>
+                <?php if (isset($item["completed"]) && $item["completed"]): ?>
+                    task--completed
+                <?php endif; ?>
+                <?php if (isset($item["hours_until_end"]) && $item["hours_until_end"] <= 24): ?>
+                    task--important
                 <?php endif; ?>
             ">
                 <td class="task__select">
                     <label class="checkbox task__checkbox">
                         <input class="checkbox__input visually-hidden" type="checkbox"
-                            <?php if(isset ($item["completed"])): ?>
-                                <?php if ($item["completed"]): ?>
-                                    checked
-                                <?php endif; ?>
+                            <?php if (isset($item["completed"]) && $item["completed"]): ?>
+                                checked
                             <?php endif; ?>
                         >
                         <span class="checkbox__text">
-                            <?php if(isset ($item["title"])): ?>
+                            <?php if (isset($item["title"])): ?>
                                 <?= htmlspecialchars($item["title"]); ?>
                             <?php endif; ?>
                         </span>
                     </label>
                 </td>
                 <td class="task__date">
-                    <?php if(isset ($item["deadline"])): ?>
+                    <?php if (isset($item["deadline"])): ?>
                         <?= htmlspecialchars($item["deadline"]); ?>
                     <?php endif; ?>
                 </td>
