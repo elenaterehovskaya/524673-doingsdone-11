@@ -1,30 +1,35 @@
-CREATE DATABASE doings_done DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+CREATE DATABASE doings_done DEFAULT CHARACTER SET 'utf8' DEFAULT COLLATE 'utf8_general_ci';
+
 USE doings_done;
 
 CREATE TABLE projects (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
     name CHAR(128) NOT NULL UNIQUE,
-    user_id INT
+    KEY(user_id)
 );
 
 CREATE TABLE tasks (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    project_id INT,
-    user_id INT,
-    data_add TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    title CHAR(128) NOT NULL,
-    file CHAR(128),
-    deadline DATE NOT NULL,
-    completed BOOL DEFAULT 0
+    user_id INT NOT NULL,
+    project_id INT NOT NULL,
+    title CHAR(255) NOT NULL,
+    file CHAR(255),
+    deadline DATE NULL,
+    status BOOL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX(user_id),
+    KEY(project_id),
+    INDEX(title),
+    INDEX(deadline),
+    KEY(status)
 );
 
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    data TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     email VARCHAR(128) NOT NULL UNIQUE,
-    name_user CHAR(128) NOT NULL,
-    password CHAR(64) NOT NULL
+    name CHAR(128) NOT NULL,
+    password CHAR(64) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX(name)
 );
-
-CREATE INDEX title ON tasks(title);
-CREATE INDEX deadline ON tasks(deadline);
