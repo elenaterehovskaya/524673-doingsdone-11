@@ -53,12 +53,11 @@ foreach ($tasks as $task_key => $task) {
 }
 
 /**
- * Выводит информацию о массиве в удобочитаемом виде
- * Предназначение — отладка кода
- * @param array $name Ассоциативный или двумерный массив с данными
+ * Выводит информацию в удобочитаемом виде (предназначение — отладка кода)
+ * @param mixed $value Ассоциативный или двумерный массив с данными
  */
-function print_format(array $name) {
+function debug($value) {
     print("<pre>");
-    print_r($name);
+    print_r($value);
     print("</pre>");
 }
