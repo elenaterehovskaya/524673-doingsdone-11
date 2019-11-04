@@ -39,10 +39,9 @@ function get_tasks_count_by_project(array $tasks, string $item) {
 }
 
 /**
- * Расчёт оставшегося времени до определенной даты (окончания выполнения задач)
+ * Расчёт оставшегося времени до определенной даты (даты окончания выполнения задачи)
  * с помощью метки времени unixtime
  */
-
 foreach ($tasks as $task_key => $task) {
     if (isset($task["deadline"])) {
         $ts_end = strtotime($task["deadline"]);
@@ -55,9 +54,10 @@ foreach ($tasks as $task_key => $task) {
 
 /**
  * Выводит информацию о массиве в удобочитаемом виде
+ * Предназначение — отладка кода
  * @param array $name Ассоциативный или двумерный массив с данными
  */
-function print_format($name) {
+function print_format(array $name) {
     print("<pre>");
     print_r($name);
     print("</pre>");
