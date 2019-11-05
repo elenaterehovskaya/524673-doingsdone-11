@@ -5,8 +5,9 @@ USE doings_done;
 CREATE TABLE projects (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    name CHAR(128) NOT NULL UNIQUE,
-    KEY(user_id)
+    name CHAR(128) NOT NULL,
+    KEY(user_id),
+    KEY(name)
 );
 
 CREATE TABLE tasks (
