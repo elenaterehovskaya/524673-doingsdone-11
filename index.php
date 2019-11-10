@@ -9,29 +9,63 @@ $link = mysqli_connect("localhost", "root", "", "doings_done");
 mysqli_set_charset($link, "utf8");
 
 // Проверка подключения и выполнение запросов
-if ($link == false) {
-    print("Ошибка подключения к MySQL: " . mysqli_connect_error());
+if ($link === false) {
+    // Ошибка подключения к MySQL
+    $error_string = mysqli_connect_error();
+    $error_content = include_template($path_to_template . "error.php",
+        ["error" => $error_string]);
+    $layout_content = include_template($path_to_template . "layout.php", [
+        "content" => $error_content,
+        "user" => $user,
+        "title" => "Дела в порядке"
+    ]);
+    print($layout_content);
+    exit;
 }
 else {
     // SQL-запрос для получения данных о текущем пользователе
-    $sql = "SELECT id, name FROM users WHERE id = 1";
+    $user_id = 1;
+
+    $sql = "SELECT id, name FROM users WHERE id = " . $user_id;
     $result = mysqli_query($link, $sql);
 
-    if ($result == false) {
-        print("Произошла ошибка при выполнении SQL запроса: " . mysqli_error($link));
+    if ($result === false) {
+        // Ошибка при выполнении SQL запроса
+        $error_string = mysqli_error($link);
+        $error_content = include_template($path_to_template . "error.php",
+            ["error" => $error_string]);
+        $layout_content = include_template($path_to_template . "layout.php", [
+            "content" => $error_content,
+            "user" => $user,
+            "title" => "Дела в порядке"
+        ]);
+        print($layout_content);
+        exit;
     }
     else {
+        // Получаем данные о пользователе в виде ассоциативного массива
         $user = mysqli_fetch_assoc($result);
     }
 
     // SQL-запрос для получения списка проектов у текущего пользователя
-    $sql = "SELECT id, name FROM projects WHERE user_id = 1";
+    $sql = "SELECT id, name FROM projects WHERE user_id = " . $user_id;
     $result = mysqli_query($link, $sql);
 
-    if ($result == false) {
-        print("Произошла ошибка при выполнении SQL запроса: " . mysqli_error($link));
+    if ($result === false) {
+        // Ошибка при выполнении SQL запроса
+        $error_string = mysqli_error($link);
+        $error_content = include_template($path_to_template . "error.php",
+            ["error" => $error_string]);
+        $layout_content = include_template($path_to_template . "layout.php", [
+            "content" => $error_content,
+            "user" => $user,
+            "title" => "Дела в порядке"
+        ]);
+        print($layout_content);
+        exit;
     }
     else {
+        // Получаем список проектов у текущего пользователя в виде двумерного массива
         $projects = mysqli_fetch_all($result, MYSQLI_ASSOC);
     }
 
@@ -39,13 +73,24 @@ else {
     $sql = "SELECT tasks.id, tasks.user_id, projects.name AS project,  tasks.title, tasks.deadline, tasks.status FROM tasks "
         . "LEFT JOIN projects ON tasks.project_id = projects.id "
         . "LEFT JOIN users ON tasks.user_id = users.id "
-        . "WHERE tasks.user_id = 1";
+        . "WHERE tasks.user_id = " . $user_id;
     $result = mysqli_query($link, $sql);
 
-    if ($result == false) {
-        print("Произошла ошибка при выполнении SQL запроса: " . mysqli_error($link));
+    if ($result === false) {
+        // Ошибка при выполнении SQL запроса
+        $error_string = mysqli_error($link);
+        $error_content = include_template($path_to_template . "error.php",
+            ["error" => $error_string]);
+        $layout_content = include_template($path_to_template . "layout.php", [
+            "content" => $error_content,
+            "user" => $user,
+            "title" => "Дела в порядке"
+        ]);
+        print($layout_content);
+        exit;
     }
     else {
+        // Получаем список из всех задач у текущего пользователя в виде двумерного массива
         $tasks = mysqli_fetch_all($result, MYSQLI_ASSOC);
     }
 }

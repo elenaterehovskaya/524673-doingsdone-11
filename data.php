@@ -19,4 +19,7 @@ $tasks = [];
 // HTML-код основного содержимого страницы
 $content = "";
 
+// Текст ошибки
+$error = "";
+
 $show_complete_tasks = rand(0, 1);
