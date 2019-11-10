@@ -78,7 +78,7 @@
                 </td>
                 <td class="task__date">
                     <?php if (isset($item["deadline"])): ?>
-                        <?= htmlspecialchars($item["deadline"]); ?>
+                        <?= htmlspecialchars(date("d.m.Y", strtotime($item["deadline"]))); ?>
                     <?php endif; ?>
                 </td>
                 <td class="task__controls"></td>
