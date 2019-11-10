@@ -2,8 +2,8 @@
  Добавление новых записей в таблицу users
  */
 INSERT INTO users (email, name, password)
-VALUES ("vasilisa@yandex.ru", "vasilisa", "rnjnfv"),
-       ("nikifor@gmail.com", "nikifor", "zpltcm");
+VALUES ("vasilisa@yandex.ru", "Василиса", "rnjnfv"),
+       ("nikifor@gmail.com", "Никифор", "zpltcm");
 
 /*
  Добавление новых записей в таблицу projects
@@ -46,7 +46,7 @@ VALUES (2, "Учёба");
  Добавить новую задачу в таблицу tasks для пользователя с user_id = 2
  */
 INSERT INTO tasks (user_id, project_id, title, deadline)
-VALUES (2, 10, "Записаться на курсы", "2012-12-03");
+VALUES (2, 10, "Записаться на курсы", "2019-12-03");
 
 /*
  Получить все записи из таблицы users
@@ -128,3 +128,12 @@ SELECT
 FROM tasks
 LEFT JOIN projects ON tasks.project_id = projects.id
 LEFT JOIN users ON tasks.user_id = users.id;
+
+/*
+ Пометить задачи как выполненные
+ */
+UPDATE tasks SET status = 1
+WHERE deadline = "2019-11-06";
+
+UPDATE tasks SET status = 1
+WHERE deadline = "2019-11-08";
