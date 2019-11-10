@@ -24,14 +24,14 @@ function include_template(string $name, array $data = []) {
 /**
  * Подсчитывает количество задач внутри каждого проекта
  * @param array $tasks Двумерный массив с данными для задач проекта
- * @param string $item Название проекта
+ * @param array $item Название проекта
  * @return int $count Количество задач внутри проекта
  */
-function get_tasks_count_by_project(array $tasks, string $item) {
+function get_tasks_count_by_project(array $tasks, array $item) {
     $count = 0;
 
     foreach ($tasks as $task) {
-        if (isset($task["project"]) && $task["project"] == $item) {
+        if (isset($task["project"]) && isset($item["name"]) && $task["project"] == $item["name"]) {
             $count ++;
         }
     }

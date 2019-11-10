@@ -24,8 +24,11 @@
 
                 <div class="main-header__side-item user-menu">
                     <div class="user-menu__data">
-                        <p>Константин</p>
-
+                        <p>
+                            <?php if (isset($user["name"])): ?>
+                                <?= htmlspecialchars($user["name"]); ?>
+                            <?php endif; ?>
+                        </p>
                         <a href="#">Выйти</a>
                     </div>
                 </div>

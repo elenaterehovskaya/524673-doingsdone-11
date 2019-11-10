@@ -6,7 +6,10 @@
             <?php foreach ($projects as $item): ?>
                 <li class="main-navigation__list-item">
                     <a class="main-navigation__list-item-link" href="#">
-                        <?= htmlspecialchars($item); ?></a>
+                        <?php if (isset($item["name"])): ?>
+                            <?= htmlspecialchars($item["name"]); ?>
+                        <?php endif; ?>
+                    </a>
                     <span class="main-navigation__list-item-count">
                         <?= get_tasks_count_by_project($tasks, $item); ?>
                     </span>
@@ -48,11 +51,11 @@
 
     <table class="tasks">
         <?php foreach ($tasks as $item): ?>
-            <?php if ($show_complete_tasks == 0 && isset($item["completed"]) && $item["completed"]): ?>
+            <?php if ($show_complete_tasks == 0 && isset($item["status"]) && $item["status"]): ?>
                 <?php continue; ?>
             <?php endif; ?>
             <tr class="tasks__item task
-                <?php if (isset($item["completed"]) && $item["completed"]): ?>
+                <?php if (isset($item["status"]) && $item["status"]): ?>
                     task--completed
                 <?php endif; ?>
                 <?php if (isset($item["hours_until_end"]) && $item["hours_until_end"] <= 24): ?>
@@ -62,7 +65,7 @@
                 <td class="task__select">
                     <label class="checkbox task__checkbox">
                         <input class="checkbox__input visually-hidden" type="checkbox"
-                            <?php if (isset($item["completed"]) && $item["completed"]): ?>
+                            <?php if (isset($item["status"]) && $item["status"]): ?>
                                 checked
                             <?php endif; ?>
                         >
