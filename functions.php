@@ -24,7 +24,7 @@ function include_template(string $name, array $data = []) {
 /**
  * Подсчитывает количество задач внутри каждого проекта
  * @param array $tasks Двумерный массив с данными для задач проекта
- * @param array $item Название проекта
+ * @param array $item Двумерный массив с названиями проектов
  * @return int $count Количество задач внутри проекта
  */
 function get_tasks_count_by_project(array $tasks, array $item) {
@@ -41,15 +41,20 @@ function get_tasks_count_by_project(array $tasks, array $item) {
 /**
  * Расчёт оставшегося времени до определенной даты (даты окончания выполнения задачи)
  * с помощью метки времени unixtime
+ * @param array $tasks
+ * @return array
  */
-foreach ($tasks as $task_key => $task) {
-    if (isset($task["deadline"])) {
-        $ts_end = strtotime($task["deadline"]);
-        $ts_now = time();
-        $ts_diff = $ts_end - $ts_now;
-        $hours_until_end = floor($ts_diff / 3600);
-        $tasks[$task_key]["hours_until_end"] = $hours_until_end;
+function addHoursUntilEnd2Tasks(array $tasks) {
+    foreach ($tasks as $task_key => $task) {
+        if (isset($task["deadline"])) {
+            $ts_end = strtotime($task["deadline"]);
+            $ts_now = time();
+            $ts_diff = $ts_end - $ts_now;
+            $hours_until_end = floor($ts_diff / 3600);
+            $tasks[$task_key]["hours_until_end"] = $hours_until_end;
+        }
     }
+    return $tasks;
 }
 
 /**

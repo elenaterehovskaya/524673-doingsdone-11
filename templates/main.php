@@ -4,14 +4,18 @@
     <nav class="main-navigation">
         <ul class="main-navigation__list">
             <?php foreach ($projects as $item): ?>
-                <li class="main-navigation__list-item">
-                    <a class="main-navigation__list-item-link" href="#">
+                <li class="main-navigation__list-item
+                    <?php if (isset($item["id"]) && intval($item["id"]) === intval($_GET["id"])): ?>
+                        main-navigation__list-item--active
+                    <?php endif; ?>
+                 ">
+                    <a class="main-navigation__list-item-link" href="/index.php?id=<?= $item["id"]; ?>">
                         <?php if (isset($item["name"])): ?>
                             <?= htmlspecialchars($item["name"]); ?>
                         <?php endif; ?>
                     </a>
                     <span class="main-navigation__list-item-count">
-                        <?= get_tasks_count_by_project($tasks, $item); ?>
+                        <?= get_tasks_count_by_project($all_tasks, $item); ?>
                     </span>
                 </li>
             <?php endforeach; ?>
