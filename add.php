@@ -30,7 +30,7 @@ else {
     /*
      * SQL-запрос для получения данных о текущем пользователе
      */
-    $user_id = 1;
+    $user_id = 2;
 
     $sql = "SELECT id, name FROM users WHERE id = " . $user_id;
     $result = mysqli_query($link, $sql);
@@ -77,34 +77,6 @@ else {
         $projects = mysqli_fetch_all($result, MYSQLI_ASSOC);
     }
 
-    // Проверяем для нашего текущего ID проекта из адресной строки его существование в наших проектах
-    if (isset($_GET["id"])) {
-        $project_id = intval($_GET["id"]);
-        $weFindProject = false;
-
-        foreach ($projects as $key => $value) {
-            if ($project_id === $value["id"]) {
-                $weFindProject = true;
-                break;
-            }
-        }
-        if ($weFindProject === false) {
-            // Ошибка: значения параметра запроса не существует
-            http_response_code(404);
-            $error_string = 'Не найдено проекта с таким ID!';
-            $error_content = include_template($path_to_template . "error.php", [
-                "error" => $error_string
-            ]);
-            $layout_content = include_template($path_to_template . "layout.php", [
-                "content" => $error_content,
-                "user" => $user,
-                "title" => "Дела в порядке"
-            ]);
-            print($layout_content);
-            exit;
-        }
-    }
-
     /*
      * SQL-запрос для получения списка из всех задач у текущего пользователя без привязки к проекту
      */
@@ -137,51 +109,57 @@ SQL;
     }
 
     /*
-     * SQL-запрос для получения списка всех задач у текущего пользователя
+     * Получаем из полей формы необходимые данные от пользователя и сохраняем их в БД
      */
-    $sql = <<<SQL
-    SELECT tasks.id, tasks.user_id, projects.name AS project, tasks.title, tasks.deadline, tasks.status 
-    FROM tasks
-    LEFT JOIN projects ON tasks.project_id = projects.id 
-    LEFT JOIN users ON tasks.user_id = users.id
-    WHERE tasks.user_id = $user_id
-SQL;
-    if (isset($_GET["id"])) {
-        $project_id = intval($_GET["id"]);
-        $sql = $sql . " and projects.id = " . $project_id;
-    }
-    $result = mysqli_query($link, $sql);
+    // Страница запрошена методом POST
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        // Скопируем POST массив в новую переменную $_POST["name"], $_POST["project"], $_POST["date"]
+        $task = $_POST;
+        debug($task);
 
-    if ($result === false || mysqli_num_rows($result) == 0) {
-        // Ошибка при выполнении SQL запроса
-        $error_string = mysqli_error($link);
-        if (mysqli_num_rows($result) == 0) {
-            $error_string = 'Не найдено ни одной задачи для данного проекта!';
+        // SQL-запрос на добавление новой задачи (на месте значений — знаки вопроса — плейсхолдеры)
+        $sql = "INSERT INTO tasks (user_id, title, project_id, deadline) VALUES (2, ?, ?, ?)";
+        // С помощью функции-помощника формируем подготовленное выражение, на основе SQL-запроса и значений для него
+        $stmt = db_get_prepare_stmt($link, $sql, $task);
+        // Выполняем полученное выражение
+        $result = mysqli_stmt_execute($stmt);
+
+        if ($result === false) {
+            // Ошибка при выполнении SQL запроса
+            $error_string = mysqli_error($link);
+            $error_content = include_template($path_to_template . "error.php", [
+                "error" => $error_string
+            ]);
+            $layout_content = include_template($path_to_template . "layout.php", [
+                "content" => $error_content,
+                "user" => $user,
+                "title" => "Дела в порядке"
+            ]);
+            print($layout_content);
+            exit;
+        } else {
+            // Если запрос выполнен успешно, переадресовываем пользователя на главную страницу
+            $page_content = include_template($path_to_template . "main.php", [
+                "show_complete_tasks" => $show_complete_tasks,
+                "projects" => $projects,
+                "all_tasks" => $all_tasks,
+                "tasks" => $tasks
+            ]);
+            $layout_content = include_template($path_to_template . "layout.php", [
+                "content" => $page_content,
+                "user" => $user,
+                "title" => "Дела в порядке"
+            ]);
+            print($layout_content);
+            exit;
         }
-        $error_content = include_template($path_to_template . "error.php", [
-            "error" => $error_string
-        ]);
-        $layout_content = include_template($path_to_template . "layout.php", [
-            "content" => $error_content,
-            "user" => $user,
-            "title" => "Дела в порядке"
-        ]);
-        print($layout_content);
-        exit;
-    } else {
-        // Получаем список из всех задач у текущего пользователя в виде двумерного массива
-        $tasks = mysqli_fetch_all($result, MYSQLI_ASSOC);
-        // Добавляем в массив кол-во часов, оставшихся до даты окончания выполнения задач
-        $tasks = addHoursUntilEnd2Tasks($tasks);
     }
 }
 
-// Подключаем шаблон Главной страницы и передаём туда необходимые данные: список проектов, полный список задач и список задач у текущего пользователя
-$page_content = include_template($path_to_template . "main.php", [
-    "show_complete_tasks" => $show_complete_tasks,
+// Подключаем шаблон страницы Добавления задачи и передаём туда необходимые данные: список проектов, полный список задач у текущего пользователя
+$page_content = include_template($path_to_template . "form-task.php", [
     "projects" => $projects,
-    "all_tasks" => $all_tasks,
-    "tasks" => $tasks
+    "all_tasks" => $all_tasks
 ]);
 
 // Подключаем Лейаут и передаём туда необходимые данные: HTML-код основного содержимого страницы, имя пользователя и title для страницы
