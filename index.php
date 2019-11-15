@@ -15,10 +15,10 @@ mysqli_set_charset($link, "utf8");
 if ($link === false) {
     // Ошибка подключения к MySQL
     $error_string = mysqli_connect_error();
-    $error_content = include_template($path_to_template . "error.php", [
+    $error_content = includeTemplate($path_to_template . "error.php", [
         "error" => $error_string
     ]);
-    $layout_content = include_template($path_to_template . "layout.php", [
+    $layout_content = includeTemplate($path_to_template . "layout.php", [
         "content" => $error_content,
         "user" => $user,
         "title" => "Дела в порядке"
@@ -38,10 +38,10 @@ else {
     if ($result === false) {
         // Ошибка при выполнении SQL запроса
         $error_string = mysqli_error($link);
-        $error_content = include_template($path_to_template . "error.php", [
+        $error_content = includeTemplate($path_to_template . "error.php", [
             "error" => $error_string
         ]);
-        $layout_content = include_template($path_to_template . "layout.php", [
+        $layout_content = includeTemplate($path_to_template . "layout.php", [
             "content" => $error_content,
             "user" => $user,
             "title" => "Дела в порядке"
@@ -62,10 +62,10 @@ else {
     if ($result === false) {
         // Ошибка при выполнении SQL запроса
         $error_string = mysqli_error($link);
-        $error_content = include_template($path_to_template . "error.php", [
+        $error_content = includeTemplate($path_to_template . "error.php", [
             "error" => $error_string
         ]);
-        $layout_content = include_template($path_to_template . "layout.php", [
+        $layout_content = includeTemplate($path_to_template . "layout.php", [
             "content" => $error_content,
             "user" => $user,
             "title" => "Дела в порядке"
@@ -92,10 +92,10 @@ else {
             // Ошибка: значения параметра запроса не существует
             http_response_code(404);
             $error_string = 'Не найдено проекта с таким ID!';
-            $error_content = include_template($path_to_template . "error.php", [
+            $error_content = includeTemplate($path_to_template . "error.php", [
                 "error" => $error_string
             ]);
-            $layout_content = include_template($path_to_template . "layout.php", [
+            $layout_content = includeTemplate($path_to_template . "layout.php", [
                 "content" => $error_content,
                 "user" => $user,
                 "title" => "Дела в порядке"
@@ -121,10 +121,10 @@ SQL;
         // Ошибка при выполнении SQL запроса или SQL запрос не вернул ни одной записи
         http_response_code(404);
         $error_string = mysqli_error($link);
-        $error_content = include_template($path_to_template . "error.php", [
+        $error_content = includeTemplate($path_to_template . "error.php", [
             "error" => $error_string
         ]);
-        $layout_content = include_template($path_to_template . "layout.php", [
+        $layout_content = includeTemplate($path_to_template . "layout.php", [
             "content" => $error_content,
             "user" => $user,
             "title" => "Дела в порядке"
@@ -145,23 +145,34 @@ SQL;
     LEFT JOIN projects ON tasks.project_id = projects.id 
     LEFT JOIN users ON tasks.user_id = users.id
     WHERE tasks.user_id = $user_id
+    ORDER BY tasks.id DESC
 SQL;
     if (isset($_GET["id"])) {
         $project_id = intval($_GET["id"]);
-        $sql = $sql . " and projects.id = " . $project_id;
+        //$sql = $sql . " and projects.id = " . $project_id;
+        $sql = <<<SQL
+    SELECT tasks.id, tasks.user_id, projects.name AS project, tasks.title, tasks.deadline, tasks.status 
+    FROM tasks
+    LEFT JOIN projects ON tasks.project_id = projects.id 
+    LEFT JOIN users ON tasks.user_id = users.id
+    WHERE tasks.user_id = $user_id and projects.id = $project_id
+    ORDER BY tasks.id DESC
+SQL;
     }
     $result = mysqli_query($link, $sql);
+    $records_count = mysqli_num_rows($result);
 
-    if ($result === false || mysqli_num_rows($result) == 0) {
+    if ($result === false || $records_count == 0) {
         // Ошибка при выполнении SQL запроса
         $error_string = mysqli_error($link);
-        if (mysqli_num_rows($result) == 0) {
+        if ($records_count == 0) {
+            http_response_code(404);
             $error_string = 'Не найдено ни одной задачи для данного проекта!';
         }
-        $error_content = include_template($path_to_template . "error.php", [
+        $error_content = includeTemplate($path_to_template . "error.php", [
             "error" => $error_string
         ]);
-        $layout_content = include_template($path_to_template . "layout.php", [
+        $layout_content = includeTemplate($path_to_template . "layout.php", [
             "content" => $error_content,
             "user" => $user,
             "title" => "Дела в порядке"
@@ -176,16 +187,16 @@ SQL;
     }
 }
 
-// Подключаем шаблон Главной страницы и передаём туда необходимые данные: список проектов, полный список задач и список задач у текущего пользователя
-$page_content = include_template($path_to_template . "main.php", [
+// Подключаем шаблон «Главной страницы» и передаём туда необходимые данные: список проектов, полный список задач и список задач у текущего пользователя
+$page_content = includeTemplate($path_to_template . "main.php", [
     "show_complete_tasks" => $show_complete_tasks,
     "projects" => $projects,
     "all_tasks" => $all_tasks,
     "tasks" => $tasks
 ]);
 
-// Подключаем Лейаут и передаём туда необходимые данные: HTML-код основного содержимого страницы, имя пользователя и title для страницы
-$layout_content = include_template($path_to_template . "layout.php", [
+// Подключаем «Лейаут» и передаём туда необходимые данные: HTML-код основного содержимого страницы, имя пользователя и title для страницы
+$layout_content = includeTemplate($path_to_template . "layout.php", [
     "content" => $page_content,
     "user" => $user,
     "title" => "Дела в порядке"

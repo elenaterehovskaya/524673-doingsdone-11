@@ -15,7 +15,7 @@
                         <?php endif; ?>
                     </a>
                     <span class="main-navigation__list-item-count">
-                        <?= get_tasks_count_by_project($all_tasks, $item); ?>
+                        <?= getCountTasksProject($all_tasks, $item); ?>
                     </span>
                 </li>
             <?php endforeach; ?>
@@ -80,6 +80,15 @@
                         </span>
                     </label>
                 </td>
+
+                <td class="task__file">
+                    <?php if (isset($item["file"])): ?>
+                        <a class="download-link" href="<?= $file_url; ?>">
+                            <?= $file_name; ?>
+                        </a>
+                    <?php endif; ?>
+                </td>
+
                 <td class="task__date">
                     <?php if (isset($item["deadline"])): ?>
                         <?= htmlspecialchars(date("d.m.Y", strtotime($item["deadline"]))); ?>
