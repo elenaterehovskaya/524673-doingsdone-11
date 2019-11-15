@@ -5,7 +5,7 @@
         <ul class="main-navigation__list">
             <?php foreach ($projects as $item): ?>
                 <li class="main-navigation__list-item
-                    <?php if (isset($item["id"]) && intval($item["id"]) === intval($_GET["id"])): ?>
+                    <?php if (isset($item["id"]) && isset($_GET["id"]) && $item["id"] === intval($_GET["id"])): ?>
                         main-navigation__list-item--active
                     <?php endif; ?>
                  ">
@@ -15,7 +15,7 @@
                         <?php endif; ?>
                     </a>
                     <span class="main-navigation__list-item-count">
-                        <?= get_tasks_count_by_project($all_tasks, $item); ?>
+                        <?= getCountTasksProject($all_tasks, $item); ?>
                     </span>
                 </li>
             <?php endforeach; ?>
@@ -23,13 +23,13 @@
     </nav>
 
     <a class="button button--transparent button--plus content__side-button"
-       href="pages/form-project.html" target="project_add">Добавить проект</a>
+       href="/pages/form-project.html" target="project_add">Добавить проект</a>
 </section>
 
 <main class="content__main">
     <h2 class="content__main-heading">Список задач</h2>
 
-    <form class="search-form" action="index.php" method="post" autocomplete="off">
+    <form class="search-form" action="/index.php" method="post" autocomplete="off">
         <input class="search-form__input" type="text" name="" value="" placeholder="Поиск по задачам">
 
         <input class="search-form__submit" type="submit" name="" value="Искать">
@@ -80,6 +80,15 @@
                         </span>
                     </label>
                 </td>
+
+                <td class="task__file">
+                    <?php if (isset($item["file"])): ?>
+                        <a class="download-link" href="<?= $file_url; ?>">
+                            <?= $file_name; ?>
+                        </a>
+                    <?php endif; ?>
+                </td>
+
                 <td class="task__date">
                     <?php if (isset($item["deadline"])): ?>
                         <?= htmlspecialchars(date("d.m.Y", strtotime($item["deadline"]))); ?>
