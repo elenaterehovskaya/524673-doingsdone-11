@@ -1,6 +1,13 @@
 <?php
 date_default_timezone_set("Europe/Moscow");
 
+$mysqlConfig = [
+    "host" => "localhost",
+    "user" => "root",
+    "password" => "",
+    "database" => "doings_done"
+];
+
 // Название папки с шаблонами
 $path_to_template = "templates/";
 

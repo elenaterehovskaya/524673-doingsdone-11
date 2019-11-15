@@ -6,7 +6,7 @@ require_once("functions.php");
 // Включаем преобразование целочисленных значений и чисел с плавающей запятой из столбцов таблицы в PHP числа
 $link = mysqli_init();
 mysqli_options($link, MYSQLI_OPT_INT_AND_FLOAT_NATIVE, 1);
-mysqli_real_connect($link, "localhost", "root", "", "doings_done");
+mysqli_real_connect($link, $mysqlConfig["host"], $mysqlConfig["user"], $mysqlConfig["password"], $mysqlConfig["database"]);
 
 // Устанавливаем кодировку при работе с MySQL
 mysqli_set_charset($link, "utf8");
@@ -145,19 +145,13 @@ SQL;
     LEFT JOIN projects ON tasks.project_id = projects.id 
     LEFT JOIN users ON tasks.user_id = users.id
     WHERE tasks.user_id = $user_id
-    ORDER BY tasks.id DESC
 SQL;
     if (isset($_GET["id"])) {
         $project_id = intval($_GET["id"]);
-        //$sql = $sql . " and projects.id = " . $project_id;
-        $sql = <<<SQL
-    SELECT tasks.id, tasks.user_id, projects.name AS project, tasks.title, tasks.deadline, tasks.status 
-    FROM tasks
-    LEFT JOIN projects ON tasks.project_id = projects.id 
-    LEFT JOIN users ON tasks.user_id = users.id
-    WHERE tasks.user_id = $user_id and projects.id = $project_id
-    ORDER BY tasks.id DESC
-SQL;
+        $sql .= " and projects.id = $project_id ORDER BY tasks.id DESC";
+    }
+    else {
+        $sql .= " ORDER BY tasks.id DESC";
     }
     $result = mysqli_query($link, $sql);
     $records_count = mysqli_num_rows($result);

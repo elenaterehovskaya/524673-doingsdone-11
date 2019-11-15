@@ -6,7 +6,7 @@ require_once("functions.php");
 // Включаем преобразование целочисленных значений и чисел с плавающей запятой из столбцов таблицы в PHP числа
 $link = mysqli_init();
 mysqli_options($link, MYSQLI_OPT_INT_AND_FLOAT_NATIVE, 1);
-mysqli_real_connect($link, "localhost", "root", "", "doings_done");
+mysqli_real_connect($link, $mysqlConfig["host"], $mysqlConfig["user"], $mysqlConfig["password"], $mysqlConfig["database"]);
 
 // Устанавливаем кодировку при работе с MySQL
 mysqli_set_charset($link, "utf8");
@@ -117,15 +117,21 @@ SQL;
         // ВАЛИДАЦИЯ ФОРМЫ
 
         // Список обязательных к заполнению полей
-        $required = ["title", "project_id"];
+        $required = ["title", "project_id", "deadline"];
         $errors = [];
+
+        // Создаём массив с ID-шниками проектов, и заносим его для проверки в функцию validateValue
+        $projects_ids = [];
+        foreach($projects as $key => $value) {
+            $projects_ids[] = $value["id"];
+        }
 
         $rules = [
             "title" => function($value) {
                 return validateLength($value, 5, 255);
             },
-            "project_id" => function($value) use ($projects) {
-                return validateValue($value, $projects);
+            "project_id" => function($value) use ($projects_ids) {
+                return validateValue($value, $projects_ids);
             }
         ];
 
@@ -153,8 +159,8 @@ SQL;
         $errors = array_filter($errors);
 
         // Проверяем ввёл ли пользователь дату выполнения задачи и проверяем её на соответствие формату 'ГГГГ-ММ-ДД'
-        if (isset($_FILES["deadline"])) {
-            $data = ($_FILES["deadline"]);
+        if (isset($_POST["deadline"])) {
+            $data = ($_POST["deadline"]);
             if (isDateValid($data) === false) {
                 $errors["deadline"] = "Введите дату в формате ГГГГ-ММ-ДД";
             }
@@ -165,12 +171,19 @@ SQL;
         }
 
         // Проверяем загрузил ли пользователь файл, получаем имя файла и его размер
-        if (isset($_FILES["user_file"])) {
+        if (isset($_FILES["user_file"]) && $_FILES['user_file']['name'] !== "") {
+
+            $current_mime_type = mime_content_type($_FILES["user_file"]["tmp_name"]);
+            $white_list_files = ["image/jpeg", "image/png", "text/plain", "application/pdf", "application/msword"];
+
             $file_name = $_FILES["user_file"]["name"];
             $file_size = $_FILES["user_file"]["size"];
             $tmp_name = $_FILES["user_file"]["tmp_name"];
 
-            if ($file_size > 200000) {
+
+            if (!in_array($current_mime_type, $white_list_files)) {
+                $errors["user_file"] = "Загрузите файл в формате jpeg, png, txt, pdf или doc";
+            }else if ($file_size > 200000) {
                 $errors["user_file"] = "Максимальный размер файла: 200Кб";
             }
             else {
@@ -182,12 +195,12 @@ SQL;
                 move_uploaded_file($tmp_name, $file_path . $file_name);
 
                 // Добавляем название файла в наш массив $task
-                $task["file"] = $file_name;
+                $task["file"] = $file_url;
             }
         }
         // Конец ВАЛИДАЦИИ ФОРМЫ
 
-        // Проверяем длину массива с ошибками. Если он не пустой, значит были ошибки и мы должны показать их пользователю вместе с формой
+        // Проверяем длину массива с ошибками. Если он не пустой, значит были ошибки. Показываем ошибки пользователю вместе с формой
         // Для этого подключаем шаблон формы и передаем туда массив, где будут заполненные поля, а также список ошибок
         if (count($errors)) {
             $page_content = includeTemplate($path_to_template . "form-task.php", [
@@ -205,7 +218,7 @@ SQL;
         }
         else {
             // SQL-запрос на добавление новой задачи (на месте значений — знаки вопроса — плейсхолдеры)
-            $sql = "INSERT INTO tasks (user_id, title, project_id, deadline, file) VALUES (2, ?, ?, ?, ?)";
+            $sql = "INSERT INTO tasks (user_id, title, project_id, deadline, file) VALUES ($user_id, ?, ?, ?, ?)";
             // С помощью функции-помощника формируем подготовленное выражение, на основе SQL-запроса и значений для него
             $stmt = dbGetPrepareStmt($link, $sql, $task);
             // Выполняем полученное выражение
