@@ -83,9 +83,7 @@
 
                 <td class="task__file">
                     <?php if (isset($item["file"])): ?>
-                        <a class="download-link" href="<?= $file_url; ?>">
-                            <?= $file_name; ?>
-                        </a>
+                        <a class="download-link" href="<?= $item["file"]; ?>">Файл</a>
                     <?php endif; ?>
                 </td>
 
