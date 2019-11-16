@@ -76,15 +76,15 @@
         <!-- Файл -->
         <div class="form__row">
             <label class="form__label" for="file">Файл</label>
-            <?php $classname = isset($errors["user_file"]) ? "form__input--error" : ""; ?>
+            <?php $classname = isset($errors["file"]) ? "form__input--error" : ""; ?>
 
             <div class="form__input-file <?= $classname ?>">
-                <input class="visually-hidden" type="file" name="user_file" id="file" value="">
+                <input class="visually-hidden" type="file" name="file" id="file" value="">
                 <label class="button button--transparent" for="file">
                     <span>Выберите файл</span>
                 </label>
-                <?php if (isset($errors["user_file"])): ?>
-                    <p class="form__message"><?= $errors["user_file"]; ?></p>
+                <?php if (isset($errors["file"])): ?>
+                    <p class="form__message"><?= $errors["file"]; ?></p>
                 <?php endif; ?>
             </div>
         </div>

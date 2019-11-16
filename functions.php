@@ -115,7 +115,7 @@ function dbGetPrepareStmt($link, $sql, $data = []) {
  */
 function dbSelectData($link, $sql, $data = []) {
     $result = [];
-    $stmt = db_get_prepare_stmt($link, $sql, $data);
+    $stmt = dbGetPrepareStmt($link, $sql, $data);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
 
@@ -133,7 +133,7 @@ function dbSelectData($link, $sql, $data = []) {
  * @return bool|int|string Возвращает автоматически генерируемый ID
  */
 function dbInsertData($link, $sql, $data = []) {
-    $stmt = db_get_prepare_stmt($link, $sql, $data);
+    $stmt = dbGetPrepareStmt($link, $sql, $data);
     $result = mysqli_stmt_execute($stmt);
 
     if ($result) {
