@@ -170,6 +170,18 @@ function getInputPostVal($name) {
 }
 
 /**
+ * Проверяет e-mail на корректность
+ * @param string $value Значение поля ввода
+ * @return string|null
+ */
+function validateEmail($value) {
+    if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
+        return "E-mail введён некорректно";
+    }
+    return null;
+}
+
+/**
  * Проверяет, присутствует ли в массиве значение
  * @param mixed $value Искомое значение
  * @param array $values_list Массив значений
@@ -193,7 +205,7 @@ function validateLength($value, $min, $max) {
     if ($value) {
         $length = strlen($value);
         if ($length < $min or $length > $max) {
-            return "Название задачи должно быть от $min до $max символов";
+            return "Поле должно содержать от $min до $max символов";
         }
     }
     return null;
