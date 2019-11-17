@@ -110,10 +110,11 @@ SQL;
         // ВАЛИДАЦИЯ ФОРМЫ
 
         // Список обязательных к заполнению полей
-        $required = ["title", "project_id", "deadline"];
+        $required = ["title", "project_id"];
         $errors = [];
         // Создаём массив с ID-шниками проектов, и заносим его для проверки в функцию validateValue
         $projects_ids = [];
+
         foreach($projects as $key => $value) {
             $projects_ids[] = $value["id"];
         }
@@ -133,12 +134,10 @@ SQL;
             "deadline" => FILTER_DEFAULT,
             "file" => FILTER_DEFAULT
         ];
-// debug($fields);
 
         // В массиве $task будут все значения полей из перечисленных в массиве $fields, если в форме не нашлось необходимого поля,
         //то оно добавится со значением NULL
         $task = filter_input_array(INPUT_POST, $fields, true);
-debug($task);
 
         // Применяем функции валидации ко всем полям формы. Результат работы функций записывается в массив ошибок
         foreach ($task as $key => $value) {
@@ -155,7 +154,7 @@ debug($task);
         // Данный массив в итоге отфильтровываем, чтобы удалить пустые значения и оставить только сообщения об ошибках
         $errors = array_filter($errors);
 
-        // Проверяем ввёл ли пользователь дату выполнения задачи и проверяем её на соответствие формату 'ГГГГ-ММ-ДД'
+        // Проверяем ввёл ли пользователь дату выполнения задачи и проверяем её на соответствие формату и текущей дате
         if (isset($_POST["deadline"])) {
             $data = ($_POST["deadline"]);
 
@@ -172,18 +171,18 @@ debug($task);
         }
 
         // Проверяем загрузил ли пользователь файл, получаем имя файла и его размер
-        if (isset($_FILES["user_file"]) && $_FILES['user_file']['name'] !== "") {
-            $current_mime_type = mime_content_type($_FILES["user_file"]["tmp_name"]);
+        if (isset($_FILES["file"]) && $_FILES["file"]["name"] !== "") {
+            $current_mime_type = mime_content_type($_FILES["file"]["tmp_name"]);
             $white_list_files = ["image/jpeg", "image/png", "text/plain", "application/pdf", "application/msword"];
-            $file_name = $_FILES["user_file"]["name"];
-            $file_size = $_FILES["user_file"]["size"];
-            $tmp_name = $_FILES["user_file"]["tmp_name"];
+            $file_name = $_FILES["file"]["name"];
+            $file_size = $_FILES["file"]["size"];
+            $tmp_name = $_FILES["file"]["tmp_name"];
 
             if (!in_array($current_mime_type, $white_list_files)) {
-                $errors["user_file"] = "Загрузите файл в формате jpeg, png, txt, pdf или doc";
+                $errors["file"] = "Загрузите файл в формате jpeg, png, txt, pdf или doc";
             }
             else if ($file_size > 200000) {
-                $errors["user_file"] = "Максимальный размер файла: 200Кб";
+                $errors["file"] = "Максимальный размер файла: 200Кб";
             }
             else {
                 // Сохраняем его в папке «uploads» и формируем ссылку на скачивание
@@ -236,6 +235,7 @@ debug($task);
             } else {
                 // Если запрос выполнен успешно, переадресовываем пользователя на главную страницу
                 header("Location: index.php");
+                exit;
             }
         }
     }
@@ -246,10 +246,12 @@ $page_content = includeTemplate($path_to_template . "form-task.php", [
     "projects" => $projects,
     "all_tasks" => $all_tasks
 ]);
+
 // Подключаем «Лейаут» и передаём туда необходимые данные: HTML-код основного содержимого страницы, имя пользователя и title для страницы
 $layout_content = includeTemplate($path_to_template . "layout.php", [
     "content" => $page_content,
     "user" => $user,
     "title" => "Дела в порядке"
 ]);
+
 print($layout_content);
