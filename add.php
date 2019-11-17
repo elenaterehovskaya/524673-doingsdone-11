@@ -21,7 +21,7 @@ if ($link === false) {
     $layout_content = includeTemplate($path_to_template . "layout.php", [
         "content" => $error_content,
         "user" => $user,
-        "title" => "Дела в порядке"
+        "title" => "Дела в порядке | Добавление задачи"
     ]);
     print($layout_content);
     exit;
@@ -41,11 +41,12 @@ else {
         $layout_content = includeTemplate($path_to_template . "layout.php", [
             "content" => $error_content,
             "user" => $user,
-            "title" => "Дела в порядке"
+            "title" => "Дела в порядке | Добавление задачи"
         ]);
         print($layout_content);
         exit;
-    } else {
+    }
+    else {
         // Получаем данные о пользователе в виде ассоциативного массива
         $user = mysqli_fetch_assoc($result);
     }
@@ -63,11 +64,12 @@ else {
         $layout_content = includeTemplate($path_to_template . "layout.php", [
             "content" => $error_content,
             "user" => $user,
-            "title" => "Дела в порядке"
+            "title" => "Дела в порядке | Добавление задачи"
         ]);
         print($layout_content);
         exit;
-    } else {
+    }
+    else {
         // Получаем список проектов у текущего пользователя в виде двумерного массива
         $projects = mysqli_fetch_all($result, MYSQLI_ASSOC);
     }
@@ -92,11 +94,12 @@ SQL;
         $layout_content = includeTemplate($path_to_template . "layout.php", [
             "content" => $error_content,
             "user" => $user,
-            "title" => "Дела в порядке"
+            "title" => "Дела в порядке | Добавление задачи"
         ]);
         print($layout_content);
         exit;
-    } else {
+    }
+    else {
         // Получаем список из всех задач у текущего пользователя без привязки к проекту в виде двумерного массива
         $all_tasks = mysqli_fetch_all($result, MYSQLI_ASSOC);
     }
@@ -108,10 +111,10 @@ SQL;
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // ВАЛИДАЦИЯ ФОРМЫ
-
         // Список обязательных к заполнению полей
         $required = ["title", "project_id"];
         $errors = [];
+
         // Создаём массив с ID-шниками проектов, и заносим его для проверки в функцию validateValue
         $projects_ids = [];
 
@@ -172,23 +175,25 @@ SQL;
 
         // Проверяем загрузил ли пользователь файл, получаем имя файла и его размер
         if (isset($_FILES["file"]) && $_FILES["file"]["name"] !== "") {
-            $current_mime_type = mime_content_type($_FILES["file"]["tmp_name"]);
-            $white_list_files = ["image/jpeg", "image/png", "text/plain", "application/pdf", "application/msword"];
+            $white_list_files = ["image/jpeg", "image/png", "image/gif", "application/pdf", "application/msword", "text/plain"];
+
+            $file_type = mime_content_type($_FILES["file"]["tmp_name"]);
             $file_name = $_FILES["file"]["name"];
             $file_size = $_FILES["file"]["size"];
             $tmp_name = $_FILES["file"]["tmp_name"];
 
-            if (!in_array($current_mime_type, $white_list_files)) {
-                $errors["file"] = "Загрузите файл в формате jpeg, png, txt, pdf или doc";
+            if (!in_array($file_type, $white_list_files)) {
+                $errors["file"] = "Загрузите файл в формате .jpg, .png, .gif, .pdf, .doc или .txt";
             }
-            else if ($file_size > 200000) {
-                $errors["file"] = "Максимальный размер файла: 200Кб";
+            else if ($file_size > 500000) {
+                $errors["file"] = "Максимальный размер файла: 500Кб";
             }
             else {
                 // Сохраняем его в папке «uploads» и формируем ссылку на скачивание
                 $file_path = __DIR__ . "/uploads/";
                 $file_url = "/uploads/" . $file_name;
-                // Функция move_uploaded_file($current_path, $new_path) проверяет, что файл действительно загружен через форму и перемещает загруженный файл по новому адресу
+                // Функция move_uploaded_file($current_path, $new_path) проверяет, что файл действительно загружен через форму
+                //и перемещает загруженный файл по новому адресу
                 move_uploaded_file($tmp_name, $file_path . $file_name);
                 // Добавляем название файла в наш массив $task
                 $task["file"] = $file_url;
@@ -207,7 +212,7 @@ SQL;
             $layout_content = includeTemplate($path_to_template . "layout.php", [
                 "content" => $page_content,
                 "user" => $user,
-                "title" => "Дела в порядке"
+                "title" => "Дела в порядке | Добавление задачи"
             ]);
             print($layout_content);
             exit;
@@ -228,14 +233,15 @@ SQL;
                 $layout_content = includeTemplate($path_to_template . "layout.php", [
                     "content" => $error_content,
                     "user" => $user,
-                    "title" => "Дела в порядке"
+                    "title" => "Дела в порядке | Добавление задачи"
                 ]);
                 print($layout_content);
                 exit;
-            } else {
+            }
+            else {
                 // Если запрос выполнен успешно, переадресовываем пользователя на главную страницу
                 header("Location: index.php");
-                exit;
+                exit();
             }
         }
     }
@@ -251,7 +257,7 @@ $page_content = includeTemplate($path_to_template . "form-task.php", [
 $layout_content = includeTemplate($path_to_template . "layout.php", [
     "content" => $page_content,
     "user" => $user,
-    "title" => "Дела в порядке"
+    "title" => "Дела в порядке | Добавление задачи"
 ]);
 
 print($layout_content);
