@@ -30,8 +30,6 @@ else {
     /*
      * SQL-запрос для получения данных о текущем пользователе
      */
-    $user_id = 1;
-
     $sql = "SELECT id, name FROM users WHERE id = " . $user_id;
     $result = mysqli_query($link, $sql);
 
@@ -109,7 +107,7 @@ else {
      * SQL-запрос для получения списка из всех задач у текущего пользователя без привязки к проекту
      */
     $sql = <<<SQL
-    SELECT tasks.id, tasks.user_id, projects.id AS 'project_id', projects.name AS project, tasks.title, tasks.deadline, tasks.status 
+    SELECT tasks.id, tasks.user_id, projects.id AS project_id, projects.name AS project, tasks.title, tasks.deadline, tasks.status 
     FROM tasks
     LEFT JOIN projects ON tasks.project_id = projects.id 
     LEFT JOIN users ON tasks.user_id = users.id
@@ -140,7 +138,7 @@ SQL;
      * SQL-запрос для получения списка всех задач у текущего пользователя
      */
     $sql = <<<SQL
-    SELECT tasks.id, tasks.user_id, projects.name AS project, tasks.title, tasks.deadline, tasks.status 
+    SELECT tasks.id, tasks.user_id, projects.name AS project, tasks.title, tasks.file, tasks.deadline, tasks.status 
     FROM tasks
     LEFT JOIN projects ON tasks.project_id = projects.id 
     LEFT JOIN users ON tasks.user_id = users.id
