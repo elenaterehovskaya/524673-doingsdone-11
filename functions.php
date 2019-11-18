@@ -68,7 +68,7 @@ function dbGetPrepareStmt($link, $sql, $data = []) {
     $stmt = mysqli_prepare($link, $sql);
 
     if ($stmt === false) {
-        $errorMsg = 'Не удалось инициализировать подготовленное выражение: ' . mysqli_error($link);
+        $errorMsg = "Не удалось инициализировать подготовленное выражение: " . mysqli_error($link);
         die($errorMsg);
     }
     if ($data) {
@@ -99,7 +99,7 @@ function dbGetPrepareStmt($link, $sql, $data = []) {
         $func(...$values);
 
         if (mysqli_errno($link) > 0) {
-            $errorMsg = 'Не удалось связать подготовленное выражение с параметрами: ' . mysqli_error($link);
+            $errorMsg = "Не удалось связать подготовленное выражение с параметрами: " . mysqli_error($link);
             die($errorMsg);
         }
     }

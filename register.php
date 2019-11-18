@@ -29,7 +29,6 @@ else {
 
     // Страница запрошена методом POST
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        $user = $_POST;
 
         // ВАЛИДАЦИЯ ФОРМЫ
         // Список обязательных к заполнению полей
@@ -44,6 +43,9 @@ else {
                 return validateLength($value, 5, 20);
             }
         ];
+
+        // В массиве $user будут все значения полей из массива POST
+        $user = $_POST;
 
         // Применяем функции валидации ко всем полям формы. Результат работы функций записывается в массив ошибок
         foreach ($user as $key => $value) {
@@ -65,7 +67,6 @@ else {
             $email = mysqli_real_escape_string($link, $user["email"]); // Экранирует специальные символы в строке
             $sql = "SELECT id FROM users WHERE email = '$email'";
             $result = mysqli_query($link, $sql);
-
             if ($result === false) {
                 // Ошибка при выполнении SQL запроса
                 $error_string = mysqli_error($link);
@@ -90,17 +91,30 @@ else {
                     $sql = "INSERT INTO users (email, name, password) VALUES (?, ?, ?)";
                     $stmt = dbGetPrepareStmt($link, $sql, [$user["email"], $user["name"], $password]);
                     $result = mysqli_stmt_execute($stmt);
-                }
-                // Если запрос выполнен успешно, переадресовываем пользователя на главную страницу
-                if ($result && empty($errors)) {
-                    header("Location: index.php");
-                    exit();
+                    if ($result === false) {
+                        // Ошибка при выполнении SQL запроса
+                        $error_string = mysqli_error($link);
+                        $error_content = includeTemplate($path_to_template . "error.php", [
+                            "error" => $error_string
+                        ]);
+                        $layout_content = includeTemplate($path_to_template . "layout.php", [
+                            "content" => $error_content,
+                            "title" => "Дела в порядке | Регистрация аккаунта"
+                        ]);
+                        print($layout_content);
+                        exit;
+                    }
+                    else {
+                        // Если запрос выполнен успешно, переадресовываем пользователя на главную страницу
+                        header("Location: index.php");
+                        exit();
+                    }
                 }
             }
         }
-        // Передадим в шаблон список ошибок и данные из формы
+        // Передаём в шаблон список ошибок и данные из формы
         $template_data ["errors"] = $errors;
-        $template_data ["value"] = $user;
+        $template_data ["user"] = $user;
     }
 }
 
