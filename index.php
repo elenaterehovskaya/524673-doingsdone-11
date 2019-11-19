@@ -1,15 +1,10 @@
 <?php
 require_once("data.php");
 require_once("functions.php");
+require_once("init.php");
 
-// Подключение к MySQL
-// Включаем преобразование целочисленных значений и чисел с плавающей запятой из столбцов таблицы в PHP числа
-$link = mysqli_init();
-mysqli_options($link, MYSQLI_OPT_INT_AND_FLOAT_NATIVE, 1);
-mysqli_real_connect($link, $mysqlConfig["host"], $mysqlConfig["user"], $mysqlConfig["password"], $mysqlConfig["database"]);
-
-// Устанавливаем кодировку при работе с MySQL
-mysqli_set_charset($link, "utf8");
+$user = $_SESSION["user"];
+$user_id = $_SESSION["user"]["id"];
 
 // Проверяем подключение и выполняем запросы
 if ($link === false) {
@@ -28,33 +23,9 @@ if ($link === false) {
 }
 else {
     /*
-     * SQL-запрос для получения данных о текущем пользователе
-     */
-    $sql = "SELECT id, name FROM users WHERE id = " . $user_id;
-    $result = mysqli_query($link, $sql);
-
-    if ($result === false) {
-        // Ошибка при выполнении SQL запроса
-        $error_string = mysqli_error($link);
-        $error_content = includeTemplate($path_to_template . "error.php", [
-            "error" => $error_string
-        ]);
-        $layout_content = includeTemplate($path_to_template . "layout.php", [
-            "content" => $error_content,
-            "user" => $user,
-            "title" => "Дела в порядке"
-        ]);
-        print($layout_content);
-        exit;
-    } else {
-        // Получаем данные о пользователе в виде ассоциативного массива
-        $user = mysqli_fetch_assoc($result);
-    }
-
-    /*
      * SQL-запрос для получения списка проектов у текущего пользователя
      */
-    $sql = "SELECT id, name FROM projects WHERE user_id = " . $user_id;
+    $sql = "SELECT id, name FROM projects WHERE user_id = " . $user_id ;
     $result = mysqli_query($link, $sql);
 
     if ($result === false) {
@@ -107,17 +78,16 @@ else {
      * SQL-запрос для получения списка из всех задач у текущего пользователя без привязки к проекту
      */
     $sql = <<<SQL
-    SELECT tasks.id, tasks.user_id, projects.id AS project_id, projects.name AS project, tasks.title, tasks.deadline, tasks.status 
-    FROM tasks
-    LEFT JOIN projects ON tasks.project_id = projects.id 
-    LEFT JOIN users ON tasks.user_id = users.id
-    WHERE tasks.user_id = $user_id
+     SELECT t.id, t.user_id, p.id AS project_id, p.name AS project, t.title, t.deadline, t.status 
+    FROM tasks t
+    LEFT JOIN projects p ON t.project_id = p.id 
+    LEFT JOIN users u ON t.user_id = u.id
+    WHERE t.user_id = $user_id
 SQL;
     $result = mysqli_query($link, $sql);
 
-    if ($result === false || mysqli_num_rows($result) == 0) {
-        // Ошибка при выполнении SQL запроса или SQL запрос не вернул ни одной записи
-        http_response_code(404);
+    if ($result === false) {
+        // Ошибка при выполнении SQL запроса
         $error_string = mysqli_error($link);
         $error_content = includeTemplate($path_to_template . "error.php", [
             "error" => $error_string
@@ -136,13 +106,13 @@ SQL;
 
     /*
      * SQL-запрос для получения списка всех задач у текущего пользователя
-     */
+
     $sql = <<<SQL
-    SELECT tasks.id, tasks.user_id, projects.name AS project, tasks.title, tasks.file, tasks.deadline, tasks.status 
-    FROM tasks
-    LEFT JOIN projects ON tasks.project_id = projects.id 
-    LEFT JOIN users ON tasks.user_id = users.id
-    WHERE tasks.user_id = $user_id
+    SELECT t.id, t.user_id, p.name AS project, t.title, t.file, t.deadline, t.status
+    FROM tasks t
+    LEFT JOIN projects p ON t.project_id = p.id
+    LEFT JOIN users u ON t.user_id = u.id
+    WHERE t.user_id = $user_id
 SQL;
     if (isset($_GET["id"])) {
         $project_id = intval($_GET["id"]);
@@ -176,10 +146,10 @@ SQL;
         $tasks = mysqli_fetch_all($result, MYSQLI_ASSOC);
         // Добавляем в массив кол-во часов, оставшихся до даты окончания выполнения задач
         $tasks = addHoursUntilEnd2Tasks($tasks);
-    }
+    } */
 }
 
-// Подключаем шаблон «Главной страницы» и передаём туда необходимые данные: список проектов, полный список задач и список задач у текущего пользователя
+// Подключаем шаблон «Главной страницы» и передаём: список проектов, полный список задач и список задач у текущего пользователя
 $page_content = includeTemplate($path_to_template . "main.php", [
     "show_complete_tasks" => $show_complete_tasks,
     "projects" => $projects,
@@ -187,7 +157,7 @@ $page_content = includeTemplate($path_to_template . "main.php", [
     "tasks" => $tasks
 ]);
 
-// Подключаем «Лейаут» и передаём туда необходимые данные: HTML-код основного содержимого страницы, имя пользователя и title для страницы
+// Подключаем «Лейаут» и передаём: HTML-код основного содержимого страницы, имя пользователя и title для страницы
 $layout_content = includeTemplate($path_to_template . "layout.php", [
     "content" => $page_content,
     "user" => $user,

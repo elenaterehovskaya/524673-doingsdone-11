@@ -1,13 +1,6 @@
 <?php
 date_default_timezone_set("Europe/Moscow");
 
-$mysqlConfig = [
-    "host" => "localhost",
-    "user" => "root",
-    "password" => "",
-    "database" => "doings_done"
-];
-
 // Название папки с шаблонами
 $path_to_template = "templates/";
 
@@ -16,10 +9,6 @@ $content = "";
 
 // title для страницы
 $title = "";
-
-// Текущий пользователь
-$user = [];
-$user_id = 2;
 
 // Cписок проектов у текущего пользователя
 $projects = [];
@@ -35,5 +24,7 @@ $error = "";
 
 // Массив с ошибками при отправке формы
 $errors = [];
+
+$error_message = "";
 
 $show_complete_tasks = rand(0, 1);
