@@ -20,14 +20,17 @@
     <div class="container <?= $classname; ?>">
         <?php if (!isset($_SESSION["user"])): ?>
             <header class="main-header">
-                <a href="/guest.php">
+                <!-- ссылка всегда должна вести на корень сайта -->
+                <a href="/">
                     <img src="../img/logo.png" width="153" height="42" alt="Логитип Дела в порядке">
                 </a>
 
-                <!-- Надо удалить или заблокировать кнопку «Войти» для страницы-заглушки -->
-                <div class="main-header__side">
-                    <a class="main-header__side-item button button--transparent" href="/auth.php">Войти</a>
-                </div>
+                <?php if ($config["enable"] === true): ?>
+                    <div class="main-header__side">
+                        <a class="main-header__side-item button button--transparent" href="/auth.php">Войти</a>
+                    </div>
+                <?php endif; ?>
+
             </header>
         <?php else: ?>
             <header class="main-header">

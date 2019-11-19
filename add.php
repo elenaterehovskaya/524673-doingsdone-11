@@ -3,6 +3,12 @@ require_once("data.php");
 require_once("functions.php");
 require_once("init.php");
 
+// Если пользователь не вошёл в систему (т.е. нет о нем информации в сессии), подключаем тут же (!) страницу для гостя и выходим
+if (!isset($_SESSION["user"])) {
+    header("location: /guest.php");
+    exit;
+}
+
 $user = $_SESSION["user"];
 $user_id = $_SESSION["user"]["id"];
 

@@ -1,4 +1,5 @@
 <?php
+require_once("config.php");
 require_once("data.php");
 require_once("functions.php");
 require_once("init.php");
@@ -83,7 +84,8 @@ $page_content = includeTemplate($path_to_template . "form-auth.php", [
 $layout_content = includeTemplate($path_to_template . "layout.php", [
     "content" => $page_content,
     "user" => [],
-    "title" => "Дела в порядке | Авторизация на сайте"
+    "title" => "Дела в порядке | Авторизация на сайте",
+    "config" => $config // проброс переменной $config
 ]);
 
 print($layout_content);

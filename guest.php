@@ -17,6 +17,7 @@ if (isset($config["enable"])) {
 $layout_content = includeTemplate($path_to_template . "layout.php", [
     "content" => $page_content,
     "title" => "Дела в порядке | Гостевая страница",
+    "config" => $config // проброс переменной $config
 ]);
 
 print($layout_content);
