@@ -1,14 +1,7 @@
 <?php
 require_once("data.php");
 require_once("functions.php");
-
-// Подключение к MySQL
-$link = mysqli_init();
-mysqli_options($link, MYSQLI_OPT_INT_AND_FLOAT_NATIVE, 1);
-mysqli_real_connect($link, $mysqlConfig["host"], $mysqlConfig["user"], $mysqlConfig["password"], $mysqlConfig["database"]);
-
-// Устанавливаем кодировку при работе с MySQL
-mysqli_set_charset($link, "utf8");
+require_once("init.php");
 
 // Проверяем подключение и выполняем запросы
 if ($link === false) {
@@ -25,10 +18,12 @@ if ($link === false) {
     exit;
 }
 else {
-    $template_data = [];
+    $tpl_data = [];
 
     // Страница запрошена методом POST
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        // В массиве $user будут все значения полей из массива POST
+        $user = $_POST;
 
         // ВАЛИДАЦИЯ ФОРМЫ
         // Список обязательных к заполнению полей
@@ -44,9 +39,6 @@ else {
             }
         ];
 
-        // В массиве $user будут все значения полей из массива POST
-        $user = $_POST;
-
         // Применяем функции валидации ко всем полям формы. Результат работы функций записывается в массив ошибок
         foreach ($user as $key => $value) {
             if (isset($rules[$key])) {
@@ -61,6 +53,9 @@ else {
 
         // Данный массив в итоге отфильтровываем, чтобы удалить пустые значения и оставить только сообщения об ошибках
         $errors = array_filter($errors);
+
+        // Передаём в шаблон список ошибок и данные из формы
+        $tpl_data ["errors"] = $errors;
 
         if (empty($errors)) {
             // Проверяем существование пользователя с email из формы в таблице пользователей в базе данных
@@ -106,24 +101,22 @@ else {
                     }
                     else {
                         // Если запрос выполнен успешно, переадресовываем пользователя на главную страницу
-                        header("Location: index.php");
+                        header("Location: auth.php");
                         exit();
                     }
                 }
             }
         }
-        // Передаём в шаблон список ошибок и данные из формы
-        $template_data ["errors"] = $errors;
-        $template_data ["user"] = $user;
     }
 }
 
-// Подключаем шаблон страницы «Регистрация аккаунта»
-$page_content = includeTemplate($path_to_template . "form-register.php", $template_data);
+// Подключаем шаблон страницы «Регистрация аккаунта» и передаём: список ошибок
+$page_content = includeTemplate($path_to_template . "form-register.php", $tpl_data);
 
-// Подключаем «Лейаут» и передаём туда необходимые данные: HTML-код основного содержимого страницы и title для страницы
+// Подключаем «Лейаут» и передаём: HTML-код основного содержимого страницы и title для страницы
 $layout_content = includeTemplate($path_to_template . "layout.php", [
     "content" => $page_content,
+    "user" => [],
     "title" => "Дела в порядке | Регистрация аккаунта"
 ]);
 
