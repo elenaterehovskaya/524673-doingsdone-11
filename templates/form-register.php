@@ -42,7 +42,7 @@
         </div>
 
         <div class="form__row form__row--controls">
-            <?php if (isset($errors)): ?>
+            <?php if (!empty($errors)): ?>
                 <p class="error-message">Пожалуйста, исправьте ошибки в форме</p>
             <?php endif; ?>
             <input class="button" type="submit" name="" value="Зарегистрироваться">
