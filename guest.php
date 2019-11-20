@@ -6,10 +6,10 @@ require_once("functions.php");
 // Подключаем шаблон «Гостевой страницы»
 if (isset($config["enable"])) {
     if ($config["enable"]) {
-        $page_content = includeTemplate(($config["tpl_path"] . "guest.php"), []);
+        $page_content = includeTemplate(($path_to_template . "guest.php"), []);
     }
     else {
-        $page_content = includeTemplate(($config["tpl_path"] . "off.php"), []);
+        $page_content = includeTemplate(($path_to_template . "off.php"), []);
     }
 }
 

@@ -1,6 +1,4 @@
 <?php
-require_once("data.php");
-require_once("functions.php");
 require_once("init.php");
 
 // Если пользователь не вошёл в систему (т.е. нет о нем информации в сессии), подключаем тут же (!) страницу для гостя и выходим
