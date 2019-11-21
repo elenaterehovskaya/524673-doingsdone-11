@@ -773,8 +773,27 @@ a:focus {
 }
 
 /**
-Правило добавлено для шаблона ошибки — error.php
+Правило добавлено для «Лейаута» для фото пользователя — layout.php
+ */
+.user-menu__photo {
+  display: inline-block;
+  vertical-align: middle;
+  width: 40px;
+  height: 40px;
+  margin-right: 10px;
+  border-radius: 50%;
+}
+
+/**
+Правило добавлено для шаблона «Ошибки» — error.php
  */
 .content__main-heading--error {
   background: transparent url("../img/icon-error.png") no-repeat left 100px top 50%;
+}
+
+/**
+Правило добавлено для шаблона «Страницы-заглушки» — off.php
+ */
+.welcome__heading--off {
+  color: #502bbb;
 }
