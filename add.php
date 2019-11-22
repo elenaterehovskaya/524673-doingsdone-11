@@ -1,7 +1,7 @@
 <?php
 require_once("init.php");
 
-// Если пользователь не вошёл в систему (т.е. нет о нем информации в сессии), подключаем тут же (!) страницу для гостя и выходим
+// Если пользователь не вошёл в систему (т.е. нет о нем информации в сессии), переходим на гостевую страницу и выходим
 if (!isset($_SESSION["user"])) {
     header("location: /guest.php");
     exit;
@@ -14,16 +14,6 @@ $user_id = $_SESSION["user"]["id"];
 if ($link === false) {
     // Ошибка подключения к MySQL
     $error_string = mysqli_connect_error();
-    $error_content = includeTemplate($path_to_template . "error.php", [
-        "error" => $error_string
-    ]);
-    $layout_content = includeTemplate($path_to_template . "layout.php", [
-        "content" => $error_content,
-        "user" => $user,
-        "title" => "Дела в порядке | Добавление задачи"
-    ]);
-    print($layout_content);
-    exit;
 }
 else {
     /*
@@ -34,16 +24,6 @@ else {
     if ($result === false) {
         // Ошибка при выполнении SQL запроса
         $error_string = mysqli_error($link);
-        $error_content = includeTemplate($path_to_template . "error.php", [
-            "error" => $error_string
-        ]);
-        $layout_content = includeTemplate($path_to_template . "layout.php", [
-            "content" => $error_content,
-            "user" => $user,
-            "title" => "Дела в порядке | Добавление задачи"
-        ]);
-        print($layout_content);
-        exit;
     }
     else {
         // Получаем список проектов у текущего пользователя в виде двумерного массива
@@ -63,16 +43,6 @@ SQL;
     if ($result === false) {
         // Ошибка при выполнении SQL запроса
         $error_string = mysqli_error($link);
-        $error_content = includeTemplate($path_to_template . "error.php", [
-            "error" => $error_string
-        ]);
-        $layout_content = includeTemplate($path_to_template . "layout.php", [
-            "content" => $error_content,
-            "user" => $user,
-            "title" => "Дела в порядке | Добавление задачи"
-        ]);
-        print($layout_content);
-        exit;
     }
     else {
         // Получаем список из всех задач у текущего пользователя без привязки к проекту в виде двумерного массива
@@ -179,12 +149,12 @@ SQL;
         // Проверяем длину массива с ошибками. Если он не пустой, значит были ошибки. Показываем ошибки пользователю вместе с формой
         // Для этого подключаем шаблон формы и передаем туда массив, где будут заполненные поля, а также список ошибок
         if (count($errors)) {
-            $page_content = includeTemplate($path_to_template . "form-task.php", [
+            $page_content = includeTemplate($tpl_path . "form-task.php", [
                 "projects" => $projects,
                 "all_tasks" => $all_tasks,
                 "errors" => $errors
             ]);
-            $layout_content = includeTemplate($path_to_template . "layout.php", [
+            $layout_content = includeTemplate($tpl_path . "layout.php", [
                 "content" => $page_content,
                 "user" => $user,
                 "title" => "Дела в порядке | Добавление задачи"
@@ -202,16 +172,6 @@ SQL;
             if ($result === false) {
                 // Ошибка при выполнении SQL запроса
                 $error_string = mysqli_error($link);
-                $error_content = includeTemplate($path_to_template . "error.php", [
-                    "error" => $error_string
-                ]);
-                $layout_content = includeTemplate($path_to_template . "layout.php", [
-                    "content" => $error_content,
-                    "user" => $user,
-                    "title" => "Дела в порядке | Добавление задачи"
-                ]);
-                print($layout_content);
-                exit;
             }
             else {
                 // Если запрос выполнен успешно, переадресовываем пользователя на главную страницу
@@ -222,14 +182,17 @@ SQL;
     }
 }
 
-// Подключаем шаблон страницы «Добавления задачи» и передаём: список проектов, полный список задач у текущего пользователя
-$page_content = includeTemplate($path_to_template . "form-task.php", [
-    "projects" => $projects,
-    "all_tasks" => $all_tasks
-]);
+if ($error_string) {
+    showMysqliError($page_content, $tpl_path, $error_string);
+}
+else {
+    $page_content = includeTemplate($tpl_path . "form-task.php", [
+        "projects" => $projects,
+        "all_tasks" => $all_tasks
+    ]);
+}
 
-// Подключаем «Лейаут» и передаём: HTML-код основного содержимого страницы, имя пользователя и title для страницы
-$layout_content = includeTemplate($path_to_template . "layout.php", [
+$layout_content = includeTemplate($tpl_path . "layout.php", [
     "content" => $page_content,
     "user" => $user,
     "title" => "Дела в порядке | Добавление задачи"

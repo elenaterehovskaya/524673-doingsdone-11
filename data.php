@@ -2,7 +2,7 @@
 date_default_timezone_set("Europe/Moscow");
 
 // Название папки с шаблонами
-$path_to_template = "templates/";
+$tpl_path = "templates/";
 
 // HTML-код основного содержимого страницы
 $content = "";
@@ -18,6 +18,10 @@ $tasks = [];
 
 // Cписок задач у текущего пользователя без привязки к проекту
 $all_tasks = [];
+
+// Список задач пользователя при поиске в форме
+$task_search = [];
+$search_message = "";
 
 // Текст ошибок при валидации формы и при выполнении SQL запросов
 $error = "";
