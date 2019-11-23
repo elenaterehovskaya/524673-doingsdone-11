@@ -9,7 +9,7 @@
                         main-navigation__list-item--active
                     <?php endif; ?>
                  ">
-                    <a class="main-navigation__list-item-link" href="/index.php?id=<?= $item["id"]; ?>">
+                    <a class="main-navigation__list-item-link" href="/?id=<?= $item["id"]; ?>">
                         <?php if (isset($item["name"])): ?>
                             <?= htmlspecialchars($item["name"]); ?>
                         <?php endif; ?>
@@ -36,25 +36,27 @@
         </label>
         <input class="search-form__submit" type="submit" name="" value="Искать">
     </form>
-    <ul class="search-form__list">
-        <?php foreach ($task_search as $item): ?>
-            <li class="search-form__item">
-
-                <?php $id = isset($item["id"]) ? "id" : ""; ?>
-                <a class="search-form__link" href="#<?= $id; ?>">
-                    <?php if (isset($item["title"])): ?>
-                        <?= htmlspecialchars($item["title"]); ?>
+    <div>
+        <ul class="search-form__list">
+            <?php foreach ($task_search as $item): ?>
+                <li class="search-form__item">
+                    <?php if (isset($item["project_id"])): ?>
+                        <a class="search-form__link" href="/?id=<?= $item["project_id"]; ?>">
                     <?php endif; ?>
-                </a>
-                <span class="search-form__text">
-                    <?php if (isset($item["project"])): ?>
-                        <?= htmlspecialchars($item["project"]); ?>
-                    <?php endif; ?>
-                </span>
-            </li>
-        <?php endforeach; ?>
-            <p class="error-message"><?= $search_message ?></p>
-    </ul>
+                        <?php if (isset($item["title"])): ?>
+                            <?= htmlspecialchars($item["title"]); ?>
+                        <?php endif; ?>
+                        </a>
+                    <span class="search-form__text">
+                        <?php if (isset($item["project"])): ?>
+                            <?= htmlspecialchars($item["project"]); ?>
+                        <?php endif; ?>
+                    </span>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+        <p class="error-message"><?= $search_message ?></p>
+    </div>
 
     <div class="tasks-controls">
         <nav class="tasks-switch">

@@ -64,7 +64,6 @@ SQL;
         $all_tasks = mysqli_fetch_all($result, MYSQLI_ASSOC);
     }
 
-
     // SQL-запрос для получения списка всех задач у текущего пользователя
     $sql = <<<SQL
     SELECT t.id, t.user_id, p.name AS project, t.title, t.file, t.deadline, t.status
@@ -82,12 +81,13 @@ SQL;
         $sql .= " ORDER BY t.id DESC";
     }
     $result = mysqli_query($link, $sql);
+    $records_count = mysqli_num_rows($result);
 
-    if ($result === false) {
+    if ($result === false || $records_count == 0) {
         // Ошибка при выполнении SQL запроса
         $error_string = mysqli_error($link);
 
-        if (mysqli_num_rows($result) == 0) {
+        if ($records_count == 0) {
             http_response_code(404);
             $error_string = "Не найдено ни одной задачи для данного проекта!";
         }
@@ -103,12 +103,12 @@ SQL;
     $task_serch = [];
 
     if (isset($_GET["q"])) {
-        $search = $_GET["q"];
+        $search = htmlspecialchars($_GET["q"]);
     }
 
     if ($search) {
         $sql = <<<SQL
-        SELECT t.id, t.user_id, p.name AS project, t.title
+        SELECT t.id, t.user_id, p.id AS project_id, p.name AS project, t.title
         FROM tasks t
         LEFT JOIN projects p ON t.project_id = p.id
         LEFT JOIN users u ON t.user_id = u.id
