@@ -6,15 +6,6 @@ require_once("init.php");
 if ($link === false) {
     // Ошибка подключения к MySQL
     $error_string = mysqli_connect_error();
-    $error_content = includeTemplate($path_to_template . "error.php", [
-        "error" => $error_string
-    ]);
-    $layout_content = includeTemplate($path_to_template . "layout.php", [
-        "content" => $error_content,
-        "title" => "Дела в порядке | Авторизация на сайте"
-    ]);
-    print($layout_content);
-    exit;
 }
 else {
     // Страница запрошена методом POST
@@ -49,15 +40,6 @@ else {
         if ($result === false) {
             // Ошибка при выполнении SQL запроса
             $error_string = mysqli_error($link);
-            $error_content = includeTemplate($path_to_template . "error.php", [
-                "error" => $error_string
-            ]);
-            $layout_content = includeTemplate($path_to_template . "layout.php", [
-                "content" => $error_content,
-                "title" => "Дела в порядке | Регистрация аккаунта"
-            ]);
-            print($layout_content);
-            exit;
         } else {
             $user = $result ? mysqli_fetch_array($result, MYSQLI_ASSOC) : null;
         }
@@ -72,18 +54,18 @@ else {
     }
 }
 
-// Подключаем шаблон страницы «Авторизация на сайте» и передаём список ошибок
-$page_content = includeTemplate($path_to_template . "form-auth.php", [
-    "errors" => $errors,
-    "error_message" => $error_message
-]);
+if ($error_string) {
+    showMysqliError($page_content, $tpl_path, $error_string);
+}
+else {
+    showValidErrorAuth($page_content, $tpl_path, $errors, $error_message);
+}
 
-// Подключаем «Лейаут» и передаём: HTML-код основного содержимого страницы и title для страницы
-$layout_content = includeTemplate($path_to_template . "layout.php", [
+$layout_content = includeTemplate($tpl_path . "layout.php", [
     "content" => $page_content,
     "user" => [],
     "title" => "Дела в порядке | Авторизация на сайте",
-    "config" => $config // проброс переменной $config
+    "config" => $config
 ]);
 
 print($layout_content);

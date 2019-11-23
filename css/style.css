@@ -334,8 +334,6 @@ a:focus {
 
 .search-form {
   position: relative;
-
-  margin-bottom: 23px;
 }
 
 .search-form__input {
@@ -378,7 +376,7 @@ a:focus {
 .tasks-switch {
   display: inline-flex;
   flex-wrap: nowrap;
-
+  margin-top: 23px;
   font-size: 13px;
 }
 
@@ -796,4 +794,32 @@ a:focus {
  */
 .welcome__heading--off {
   color: #502bbb;
+}
+
+.search-form__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.search-form__item {
+  padding: 10px 0;
+}
+
+.search-form__item a {
+  margin-right: 10px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.search-form__link:hover,
+.search-form__link:focus {
+  color: #6e45e2;
+}
+
+.search-form__text {
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  color: #9fa4af;
+  text-transform: uppercase;
 }

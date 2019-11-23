@@ -21,6 +21,25 @@ function includeTemplate(string $name, array $data = []) {
     return $result;
 }
 
+// Первый аргумент передается по ссылке (амперсанд), в этом случае функция будет работать
+// не с копией этой переменной, а изменять её значение напрямую
+function showMysqliError(&$page_content, $tpl_path, $error_string) {
+    $page_content = includeTemplate($tpl_path . "error.php", [
+        "error" => $error_string]);
+}
+
+function showValidErrorRegister(&$page_content, $tpl_path, $errors) {
+    $page_content = includeTemplate($tpl_path . "form-register.php", [
+        "errors" => $errors]);
+}
+
+function showValidErrorAuth(&$page_content, $tpl_path, $errors, $error_message) {
+    $page_content = includeTemplate($tpl_path . "form-auth.php", [
+        "errors" => $errors,
+        "error_message" => $error_message
+    ]);
+}
+
 /**
  * Подсчитывает количество задач внутри каждого проекта
  * @param array $tasks Двумерный массив с данными для задач проекта
@@ -156,6 +175,10 @@ function getPostVal($name) {
     }
     return $name;
     // return $_POST[$name] ?? ""; — краткая форма записи тела фцнкции
+}
+
+function getGetVal($name) {
+    return $_GET[$name] ?? "";
 }
 
 /**

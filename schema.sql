@@ -34,3 +34,9 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX(name)
 );
+
+/*
+ FULLTEXT — это специальный вид индекса, поддерживаемый в MySQL.
+ Добавим этот индекс нужным полям, чтобы организовать  по ним полнотекстовый поиск
+ */
+CREATE FULLTEXT INDEX task_search ON tasks(title);
