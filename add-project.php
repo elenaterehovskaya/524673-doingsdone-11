@@ -50,34 +50,46 @@ SQL;
      */
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-        // ВАЛИДАЦИЯ ФОРМЫ
         $project = $_POST;
         $errors = [];
 
-        if (isset($project["name"])) {
-            $length = strlen($project["name"]);
-            if ($length < 3 or $length > 128) {
-                $errors["name"] = "Поле должно содержать более трёх символов";
-            }
+        if (empty($project["name"])) {
+            $errors["name"] = "Это поле должно быть заполнено";
+        }
 
-            foreach($projects as $value) {
-                if ($project["name"] === $value["name"]) {
+        foreach ($projects as $value) {
+            if (isset($project["name"])) {
+                if (mb_strtoupper($project["name"]) === mb_strtoupper($value["name"])) {
                     $errors["name"] = "Проект с таким названием уже существует";
                 }
             }
         }
-        // Конец ВАЛИДАЦИИ ФОРМЫ
-        // SQL-запрос на добавление нового проекта
-        $sql = "INSERT INTO projects (user_id, name) VALUES ($user_id, ?)";
-        $stmt = dbGetPrepareStmt($link, $sql, $project);
-        $result = mysqli_stmt_execute($stmt);
-        if ($result === false) {
-            // Ошибка при выполнении SQL запроса
-            $error_string = mysqli_error($link);
-        }
-        else {
-            header("Location: index.php");
-            exit();
+
+        if (count($errors)) {
+            $page_content = includeTemplate($tpl_path . "form-project.php", [
+                "projects" => $projects,
+                "all_tasks" => $all_tasks,
+                "errors" => $errors
+            ]);
+            $layout_content = includeTemplate($tpl_path . "layout.php", [
+                "content" => $page_content,
+                "user" => $user,
+                "title" => "Дела в порядке | Добавление проекта"
+            ]);
+            print($layout_content);
+            exit;
+        } else {
+            // SQL-запрос на добавление нового проекта
+            $sql = "INSERT INTO projects (user_id, name) VALUES ($user_id, ?)";
+            $stmt = dbGetPrepareStmt($link, $sql, $project);
+            $result = mysqli_stmt_execute($stmt);
+            if ($result === false) {
+                // Ошибка при выполнении SQL запроса
+                $error_string = mysqli_error($link);
+            } else {
+                header("Location: index.php");
+                exit();
+            }
         }
     }
 }
@@ -88,8 +100,7 @@ if ($error_string) {
 else {
     $page_content = includeTemplate($tpl_path . "form-project.php", [
         "projects" => $projects,
-        "all_tasks" => $all_tasks,
-        "errors" => $errors
+        "all_tasks" => $all_tasks
     ]);
 }
 
