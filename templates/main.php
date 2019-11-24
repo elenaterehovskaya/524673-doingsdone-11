@@ -8,7 +8,7 @@
                     <?php if (isset($item["id"]) && isset($_GET["id"]) && $item["id"] === intval($_GET["id"])): ?>
                         main-navigation__list-item--active
                     <?php endif; ?>
-                 ">
+                ">
                     <a class="main-navigation__list-item-link" href="/?id=<?= $item["id"]; ?>">
                         <?php if (isset($item["name"])): ?>
                             <?= htmlspecialchars($item["name"]); ?>
@@ -22,8 +22,7 @@
         </ul>
     </nav>
 
-    <a class="button button--transparent button--plus content__side-button"
-       href="/pages/form-project.html" target="project_add">Добавить проект</a>
+    <a class="button button--transparent button--plus content__side-button" href="/add-project.php">Добавить проект</a>
 </section>
 
 <main class="content__main">

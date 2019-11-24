@@ -104,7 +104,7 @@ SQL;
 
         // Проверяем ввёл ли пользователь дату выполнения задачи и проверяем её на соответствие формату и текущей дате
         if (isset($_POST["deadline"])) {
-            $data = ($_POST["deadline"]);
+            $data = $_POST["deadline"];
 
             if (isDateValid($data) === false) {
                 $errors["deadline"] = "Введите дату в формате ГГГГ-ММ-ДД";
