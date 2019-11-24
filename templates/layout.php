@@ -38,7 +38,7 @@
                     <img src="/img/logo.png" width="153" height="42" alt="Логотип Дела в порядке">
                 </a>
                 <div class="main-header__side">
-                    <a class="main-header__side-item button button--plus open-modal" href="/add.php">Добавить задачу</a>
+                    <a class="main-header__side-item button button--plus open-modal" href="/add-task.php">Добавить задачу</a>
 
                     <div class="main-header__side-item user-menu">
                         <img class="user-menu__photo" src="/img/user-pic.jpg" width="40" height="40" alt="Фото пользователя">
@@ -64,7 +64,7 @@
         </div>
 
         <?php if (isset($_SESSION["user"])): ?>
-            <a class="main-footer__button button button--plus" href="/add.php">Добавить задачу</a>
+            <a class="main-footer__button button button--plus" href="/add-task.php">Добавить задачу</a>
         <?php endif; ?>
         <div class="main-footer__social social">
             <span class="visually-hidden">Мы в соцсетях:</span>

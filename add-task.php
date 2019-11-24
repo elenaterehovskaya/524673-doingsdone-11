@@ -14,18 +14,16 @@ $user_id = $_SESSION["user"]["id"];
 if ($link === false) {
     // Ошибка подключения к MySQL
     $error_string = mysqli_connect_error();
-}
-else {
+} else {
     /*
      * SQL-запрос для получения списка проектов у текущего пользователя
      */
-    $sql =  "SELECT id, name FROM projects WHERE user_id = " . $user_id;
+    $sql = "SELECT id, name FROM projects WHERE user_id = " . $user_id;
     $result = mysqli_query($link, $sql);
     if ($result === false) {
         // Ошибка при выполнении SQL запроса
         $error_string = mysqli_error($link);
-    }
-    else {
+    } else {
         // Получаем список проектов у текущего пользователя в виде двумерного массива
         $projects = mysqli_fetch_all($result, MYSQLI_ASSOC);
     }
@@ -43,8 +41,7 @@ SQL;
     if ($result === false) {
         // Ошибка при выполнении SQL запроса
         $error_string = mysqli_error($link);
-    }
-    else {
+    } else {
         // Получаем список из всех задач у текущего пользователя без привязки к проекту в виде двумерного массива
         $all_tasks = mysqli_fetch_all($result, MYSQLI_ASSOC);
     }
@@ -63,14 +60,14 @@ SQL;
         // Создаём массив с ID-шниками проектов, и заносим его для проверки в функцию validateValue
         $projects_ids = [];
 
-        foreach($projects as $key => $value) {
+        foreach ($projects as $key => $value) {
             $projects_ids[] = $value["id"];
         }
         $rules = [
-            "title" => function($value) {
+            "title" => function ($value) {
                 return validateLength($value, 5, 255);
             },
-            "project_id" => function($value) use ($projects_ids) {
+            "project_id" => function ($value) use ($projects_ids) {
                 return validateValue($value, $projects_ids);
             }
         ];
@@ -108,11 +105,9 @@ SQL;
 
             if (isDateValid($data) === false) {
                 $errors["deadline"] = "Введите дату в формате ГГГГ-ММ-ДД";
-            }
-            else if ($data < date("Y-m-d")) {
+            } else if ($data < date("Y-m-d")) {
                 $errors["deadline"] = "Дата выполнения задачи должна быть больше или равна текущей";
-            }
-            else {
+            } else {
                 // Добавляем дату выполнения задачи в наш массив $task
                 $task["deadline"] = $data;
             }
@@ -129,11 +124,9 @@ SQL;
 
             if (!in_array($file_type, $white_list_files)) {
                 $errors["file"] = "Загрузите файл в формате .jpg, .png, .gif, .pdf, .doc или .txt";
-            }
-            else if ($file_size > 500000) {
+            } else if ($file_size > 500000) {
                 $errors["file"] = "Максимальный размер файла: 500Кб";
-            }
-            else {
+            } else {
                 // Сохраняем его в папке «uploads» и формируем ссылку на скачивание
                 $file_path = __DIR__ . "/uploads/";
                 $file_url = "/uploads/" . $file_name;
@@ -161,8 +154,7 @@ SQL;
             ]);
             print($layout_content);
             exit;
-        }
-        else {
+        } else {
             // SQL-запрос на добавление новой задачи (на месте значений — знаки вопроса — плейсхолдеры)
             $sql = "INSERT INTO tasks (user_id, title, project_id, deadline, file) VALUES ($user_id, ?, ?, ?, ?)";
             // С помощью функции-помощника формируем подготовленное выражение, на основе SQL-запроса и значений для него
@@ -172,8 +164,7 @@ SQL;
             if ($result === false) {
                 // Ошибка при выполнении SQL запроса
                 $error_string = mysqli_error($link);
-            }
-            else {
+            } else {
                 // Если запрос выполнен успешно, переадресовываем пользователя на главную страницу
                 header("Location: index.php");
                 exit();
@@ -184,8 +175,7 @@ SQL;
 
 if ($error_string) {
     showMysqliError($page_content, $tpl_path, $error_string);
-}
-else {
+} else {
     $page_content = includeTemplate($tpl_path . "form-task.php", [
         "projects" => $projects,
         "all_tasks" => $all_tasks

@@ -28,7 +28,7 @@
 <main class="content__main">
     <h2 class="content__main-heading">Добавление задачи</h2>
 
-    <form class="form" action="/add.php" method="post" enctype="multipart/form-data" autocomplete="off">
+    <form class="form" action="/add-task.php" method="post" enctype="multipart/form-data" autocomplete="off">
         <!-- Название -->
         <div class="form__row">
             <?php $classname = isset($errors["title"]) ? "form__input--error" : ""; ?>
