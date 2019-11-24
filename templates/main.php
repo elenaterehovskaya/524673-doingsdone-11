@@ -36,18 +36,18 @@
         </label>
         <input class="search-form__submit" type="submit" name="" value="Искать">
     </form>
-    <div>
-        <ul class="search-form__list">
+    <div class="search-result">
+        <ul class="search-result__list">
             <?php foreach ($task_search as $item): ?>
-                <li class="search-form__item">
-                    <?php if (isset($item["project_id"])): ?>
-                        <a class="search-form__link" href="/?id=<?= $item["project_id"]; ?>">
+                <li class="search-result__item">
+                <?php if (isset($item["project_id"])): ?>
+                    <a class="search-result__link" href="/?id=<?= $item["project_id"]; ?>">
+                <?php endif; ?>
+                    <?php if (isset($item["title"])): ?>
+                        <?= htmlspecialchars($item["title"]); ?>
                     <?php endif; ?>
-                        <?php if (isset($item["title"])): ?>
-                            <?= htmlspecialchars($item["title"]); ?>
-                        <?php endif; ?>
-                        </a>
-                    <span class="search-form__text">
+                    </a>
+                    <span class="search-result__text">
                         <?php if (isset($item["project"])): ?>
                             <?= htmlspecialchars($item["project"]); ?>
                         <?php endif; ?>
@@ -81,8 +81,7 @@
             <?php if ($show_complete_tasks == 0 && isset($item["status"]) && $item["status"]): ?>
                 <?php continue; ?>
             <?php endif; ?>
-            <?php $id = isset($item["id"]) ? "id" : ""; ?>
-            <tr id="<?= $id; ?>" class="tasks__item task
+            <tr class="tasks__item task
                 <?php if (isset($item["status"]) && $item["status"]): ?>
                     task--completed
                 <?php endif; ?>
