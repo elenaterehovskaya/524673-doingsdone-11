@@ -830,3 +830,11 @@ a:focus {
   color: #9fa4af;
   text-transform: uppercase;
 }
+
+/**
+Добавлено для checkbox — main.php
+ */
+.task__select a {
+  color: inherit;
+  text-decoration: none;
+}

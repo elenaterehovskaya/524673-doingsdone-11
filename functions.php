@@ -174,7 +174,6 @@ function getPostVal($name) {
         $name = "";
     }
     return $name;
-    // return $_POST[$name] ?? ""; — краткая форма записи тела фцнкции
 }
 
 function getGetVal($name) {

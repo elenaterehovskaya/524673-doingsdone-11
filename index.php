@@ -17,7 +17,7 @@ if ($link === false) {
 }
 else {
     // SQL-запрос для получения списка проектов у текущего пользователя
-    $sql = "SELECT id, name FROM projects WHERE user_id = " . $user_id ;
+    $sql = "SELECT id, name FROM projects WHERE user_id = " . $user_id;
     $result = mysqli_query($link, $sql);
 
     if ($result === false) {
@@ -131,6 +131,40 @@ SQL;
             $search_message  = "Ничего не найдено по вашему запросу";
         }
     }
+
+    // Смена статуса выполнения задачи
+    $task_id = "";
+    $task_status = [];
+
+    if (isset($_GET["task_id"])) {
+        $task_id = intval($_GET["task_id"]);
+    }
+    if ($task_id) {
+        $sql = "SELECT id, status FROM tasks WHERE id = $task_id and user_id = " . $user_id;
+        $result = mysqli_query($link, $sql);
+
+        if ($result === false) {
+            // Ошибка при выполнении SQL запроса
+            $error_string = mysqli_error($link);
+        }
+        else {
+            $task_status = mysqli_fetch_assoc($result);
+        }
+
+        if (isset($task_status["status"]))  {
+            if ($task_status["status"] === 0) {
+                $sql = "UPDATE tasks SET status = 1 WHERE id = $task_id and user_id = " . $user_id;
+                $result = mysqli_query($link, $sql);
+            }
+            else if ($task_status["status"] === 1) {
+                $sql = "UPDATE tasks SET status = 0 WHERE id = $task_id and user_id = " . $user_id;
+                $result = mysqli_query($link, $sql);
+            }
+            header("Location: index.php");
+            exit();
+        }
+    }
+
 }
 
 if ($error_string) {

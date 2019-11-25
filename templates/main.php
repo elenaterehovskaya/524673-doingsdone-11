@@ -90,16 +90,20 @@
             ">
                 <td class="task__select">
                     <label class="checkbox task__checkbox">
-                        <input class="checkbox__input visually-hidden" type="checkbox"
-                            <?php if (isset($item["status"]) && $item["status"]): ?>
-                                checked
+                        <?php if (isset($item["id"])): ?>
+                        <a href="/?task_id=<?= $item["id"]; ?>">
                             <?php endif; ?>
-                        >
-                        <span class="checkbox__text">
-                            <?php if (isset($item["title"])): ?>
-                                <?= htmlspecialchars($item["title"]); ?>
-                            <?php endif; ?>
-                        </span>
+                            <input class="checkbox__input visually-hidden" type="checkbox"
+                                <?php if (isset($item["status"]) && $item["status"]): ?>
+                                    checked
+                                <?php endif; ?>
+                            >
+                            <span class="checkbox__text">
+                                <?php if (isset($item["title"])): ?>
+                                    <?= htmlspecialchars($item["title"]); ?>
+                                <?php endif; ?>
+                            </span>
+                        </a>
                     </label>
                 </td>
 
