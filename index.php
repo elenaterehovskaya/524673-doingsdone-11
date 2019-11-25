@@ -103,7 +103,7 @@ SQL;
     $task_serch = [];
 
     if (isset($_GET["q"])) {
-        $search = htmlspecialchars($_GET["q"]);
+        $search = trim(htmlspecialchars($_GET["q"]));
     }
 
     if ($search) {
@@ -160,11 +160,16 @@ SQL;
                 $sql = "UPDATE tasks SET status = 0 WHERE id = $task_id and user_id = " . $user_id;
                 $result = mysqli_query($link, $sql);
             }
-            header("Location: index.php");
-            exit();
+
+            if ($result === false) {
+                // Ошибка при выполнении SQL запроса
+                $error_string = mysqli_error($link);
+            } else {
+                header("Location: index.php");
+                exit();
+            }
         }
     }
-
 }
 
 if ($error_string) {
