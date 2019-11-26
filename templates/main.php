@@ -29,7 +29,7 @@
     <h2 class="content__main-heading">Список задач</h2>
 
     <!-- Поиск по задачам -->
-    <form class="search-form" action="/index.php" method="get" autocomplete="off">
+    <form class="search-form" action="/" method="get" autocomplete="off">
         <label>
         <input class="search-form__input" type="text" name="q" value="<?= htmlspecialchars(getGetVal("q")); ?>" placeholder="Поиск по задачам">
         </label>
@@ -37,7 +37,7 @@
     </form>
     <div class="search-result">
         <ul class="search-result__list">
-            <?php foreach ($task_search as $item): ?>
+            <?php foreach ($tasks_search as $item): ?>
                 <li class="search-result__item">
                 <?php if (isset($item["project_id"])): ?>
                     <a class="search-result__link" href="/?id=<?= $item["project_id"]; ?>">
@@ -60,9 +60,9 @@
     <div class="tasks-controls">
         <nav class="tasks-switch">
             <a href="/" class="tasks-switch__item tasks-switch__item--active">Все задачи</a>
-            <a href="/" class="tasks-switch__item">Повестка дня</a>
-            <a href="/" class="tasks-switch__item">Завтра</a>
-            <a href="/" class="tasks-switch__item">Просроченные</a>
+            <a href="/?f=today" class="tasks-switch__item">Повестка дня</a>
+            <a href="/?f=tomorrow" class="tasks-switch__item">Завтра</a>
+            <a href="/?f=past" class="tasks-switch__item">Просроченные</a>
         </nav>
 
         <label class="checkbox">

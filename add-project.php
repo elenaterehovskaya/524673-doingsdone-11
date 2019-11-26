@@ -57,9 +57,9 @@ SQL;
             $errors["name"] = "Это поле должно быть заполнено";
         }
 
-        $project_length = strlen($project['name']);
-        if ( !($project_length >= 2 && $project_length <= 5)){
-            $errors["name"] = 'Нужно не менее 2 и не более 5 символов!!';
+        $validateLength = validateLength($project["name"], 3, 15);
+        if ( $validateLength !== null ) {
+            $errors["name"] = $validateLength;
         }
 
         foreach ($projects as $value) {
