@@ -22,13 +22,13 @@
         </ul>
     </nav>
 
-    <a class="button button--transparent button--plus content__side-button" href="/pages/form-project.html">Добавить проект</a>
+    <a class="button button--transparent button--plus content__side-button" href="/add-project.php">Добавить проект</a>
 </section>
 
 <main class="content__main">
     <h2 class="content__main-heading">Добавление задачи</h2>
 
-    <form class="form" action="/add.php" method="post" enctype="multipart/form-data" autocomplete="off">
+    <form class="form" action="/add-task.php" method="post" enctype="multipart/form-data" autocomplete="off">
         <!-- Название -->
         <div class="form__row">
             <?php $classname = isset($errors["title"]) ? "form__input--error" : ""; ?>

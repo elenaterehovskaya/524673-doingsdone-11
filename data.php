@@ -20,7 +20,7 @@ $tasks = [];
 $all_tasks = [];
 
 // Список задач пользователя при поиске в форме
-$task_search = [];
+$tasks_search = [];
 $search_message = "";
 
 // Текст ошибок при валидации формы и при выполнении SQL запросов
@@ -31,4 +31,7 @@ $error_string = "";
 // Массив с ошибками при отправке формы
 $errors = [];
 
-$show_complete_tasks = rand(0, 1);
+// Для показа завершённых задач
+$show_complete_tasks = "0";
+
+$url = "";

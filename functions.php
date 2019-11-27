@@ -174,7 +174,6 @@ function getPostVal($name) {
         $name = "";
     }
     return $name;
-    // return $_POST[$name] ?? ""; — краткая форма записи тела фцнкции
 }
 
 function getGetVal($name) {
@@ -226,7 +225,7 @@ function validateValue($value, array $values_list) {
  */
 function validateLength($value, $min, $max) {
     if ($value) {
-        $length = strlen($value);
+        $length = mb_strlen($value);
         if ($length < $min or $length > $max) {
             return "Поле должно содержать от $min до $max символов";
         }
