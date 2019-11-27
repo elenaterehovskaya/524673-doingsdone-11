@@ -59,10 +59,17 @@
 
     <div class="tasks-controls">
         <nav class="tasks-switch">
-            <a href="/" class="tasks-switch__item tasks-switch__item--active">Все задачи</a>
-            <a href="/?f=today" class="tasks-switch__item">Повестка дня</a>
-            <a href="/?f=tomorrow" class="tasks-switch__item">Завтра</a>
-            <a href="/?f=past" class="tasks-switch__item">Просроченные</a>
+            <?php $classname = (!isset($_GET["f"])) ? "tasks-switch__item--active" : ""; ?>
+            <a href="/" class="tasks-switch__item <?= $classname; ?>">Все задачи</a>
+
+            <?php $classname = (isset($_GET["f"]) && $_GET["f"] == "today") ? "tasks-switch__item--active" : ""; ?>
+            <a href="/?f=today" class="tasks-switch__item <?= $classname; ?>">Повестка дня</a>
+
+            <?php $classname = (isset($_GET["f"]) && $_GET["f"] == "tomorrow") ? "tasks-switch__item--active" : ""; ?>
+            <a href="/?f=tomorrow" class="tasks-switch__item <?= $classname; ?>">Завтра</a>
+
+            <?php $classname = (isset($_GET["f"]) && $_GET["f"] == "past") ? "tasks-switch__item--active" : ""; ?>
+            <a href="/?f=past" class="tasks-switch__item <?= $classname; ?>">Просроченные</a>
         </nav>
 
         <label class="checkbox">

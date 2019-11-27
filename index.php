@@ -180,9 +180,13 @@ SQL;
     // Блок фильтров, состоящий из ссылок для быстрой фильтрации задач
     $filter = $_GET;
 
-    $scriptname = pathinfo(__FILE__, PATHINFO_BASENAME);
-    $query = http_build_query($filter);
-    $url = "/" . $scriptname . "?" . $query;
+    if (isset($_GET["show_completed"]) && $_GET["show_completed"] == 1) {
+        $show_complete_tasks = 1;
+
+        $scriptname = pathinfo(__FILE__, PATHINFO_BASENAME);
+        $query = http_build_query($filter);
+        $url = "/" . $scriptname . "?" . $query;
+    }
 
     if (isset($filter["f"])) {
         if ($filter["f"] == "today") {
@@ -192,7 +196,7 @@ SQL;
     FROM tasks t
     LEFT JOIN projects p ON t.project_id = p.id
     LEFT JOIN users u ON t.user_id = u.id
-    WHERE t.deadline = NOW() and  t.user_id = $user_id
+    WHERE DATE(t.deadline) = DATE(NOW()) and  t.user_id = $user_id
 SQL;
             $result = mysqli_query($link, $sql);
         }
@@ -204,7 +208,7 @@ SQL;
     FROM tasks t
     LEFT JOIN projects p ON t.project_id = p.id
     LEFT JOIN users u ON t.user_id = u.id
-    WHERE t.deadline = DATE_ADD(NOW(), INTERVAL 1 DAY) and  t.user_id = $user_id
+    WHERE DATE (t.deadline) = DATE(DATE_ADD(NOW(), INTERVAL 24 HOUR)) and  t.user_id = $user_id
 SQL;
             $result = mysqli_query($link, $sql);
         }
@@ -216,11 +220,12 @@ SQL;
     FROM tasks t
     LEFT JOIN projects p ON t.project_id = p.id
     LEFT JOIN users u ON t.user_id = u.id
-    WHERE t.deadline < NOW() and  t.user_id = $user_id
+    WHERE DATE(t.deadline) < DATE(NOW()) and  t.user_id = $user_id
 SQL;
             $result = mysqli_query($link, $sql);
         }
         $tasks = mysqli_fetch_all($result, MYSQLI_ASSOC);
+        $tasks = addHoursUntilEnd2Tasks($tasks);
     }
 }
 

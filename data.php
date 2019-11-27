@@ -31,7 +31,6 @@ $error_string = "";
 // Массив с ошибками при отправке формы
 $errors = [];
 
-$show_complete_tasks = 1;
-/*
-$show_complete_tasks = rand(0, 1);
-*/
+// Для показа завершённых задач
+$show_complete_tasks = "0";
+
