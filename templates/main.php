@@ -73,12 +73,20 @@
         </nav>
 
         <label class="checkbox">
-            <input class="checkbox__input visually-hidden show_completed" type="checkbox"
-                <?php if ($show_complete_tasks == 1): ?>
-                    checked
-                <?php endif; ?>
-            >
-            <span class="checkbox__text">Показывать выполненные</span>
+            <?php $linkPart = "";
+            if (mb_strpos($url, 'show_completed') === false){
+                $reverse_complete_tasks = intval(!$show_complete_tasks);
+                $linkPart = "&show_completed={$reverse_complete_tasks}";
+            }
+            ?>
+            <a href="<?=$url.$linkPart?>">
+                <input class="checkbox__input visually-hidden show_completed" type="checkbox"
+                    <?php if ($show_complete_tasks == 1): ?>
+                        checked
+                    <?php endif; ?>
+                >
+                <span class="checkbox__text">Показывать выполненные</span>
+            </a>
         </label>
     </div>
 

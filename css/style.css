@@ -834,7 +834,8 @@ a:focus {
 /**
 Добавлено для checkbox — main.php
  */
-.task__select a {
+.task__select a,
+.checkbox a {
   color: inherit;
   text-decoration: none;
 }
