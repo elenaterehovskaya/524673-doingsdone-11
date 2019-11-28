@@ -23,7 +23,7 @@ else {
                 return validateEmail($value);
             },
             "name" => function($value) {
-                return validateLength($value, 5, 20);
+                return validateLength($value, 4, 20);
             }
         ];
 
