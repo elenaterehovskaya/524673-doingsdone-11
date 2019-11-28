@@ -1,0 +1,14 @@
+{
+    "name": "domains/doingsdone",
+    "description": "Web application for easy to-do list management",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Elena Terehovskaia",
+            "email": "terehovskaia@yandex.ru"
+        }
+    ],
+    "require": {
+        "swiftmailer/swiftmailer": "^6.2"
+    }
+}
