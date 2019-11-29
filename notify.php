@@ -40,6 +40,33 @@ if ($link) {
             }
             else {
                 print("Не удалось отправить рассылку");
-            }        }
+            }
+        }
     }
 }
+
+/*
+// Create the Transport
+$transport = (new Swift_SmtpTransport($yandexMailConfig["domain"], $yandexMailConfig["port"], "ssl"))
+    ->setUsername($yandexMailConfig["user_name"])
+    ->setPassword($yandexMailConfig["password"]);
+
+// Create the Mailer using your created Transport
+$mailer = new Swift_Mailer($transport);
+
+// Create a message
+$message = (new Swift_Message("Уведомление от сервиса «Дела в порядке»"))
+    ->setFrom(["testemaily@yandex.ru" => "Дела в порядке"])
+    ->setTo(["len-sh@yandex.ru" => "Elena"])
+    ->setBody("Привет, это тестовое письмо! Уже весело!");
+
+// Send the message
+$result = $mailer->send($message);
+
+if ($result) {
+    print("Рассылка успешно отправлена");
+}
+else {
+    print("Не удалось отправить рассылку");
+}
+*/

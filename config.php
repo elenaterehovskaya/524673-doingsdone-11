@@ -9,6 +9,13 @@ $config = [
     "enable" => true
 ];
 
+$yandexMailConfig = [
+    "user_name" => "testemaily@yandex.ru",
+    "password" => "WEB_web_WEB",
+    "domain" => "smtp.yandex.ru",
+    "port" => "465"
+];
+
 $swiftMailerConfig = [
     "user_name" => "9f02a757379c29",
     "password" => "24872c91be709a",
@@ -23,6 +30,6 @@ $swiftMailerConfig = [
     "domain" => "phpdemo.ru",
     "port" => "25",
     "user_name" => "keks@phpdemo.ru",
-    "password" => "htmlacademy",
+    "password" => "htmlacademy"
 ];
 */
