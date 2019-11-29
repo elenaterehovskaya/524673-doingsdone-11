@@ -11,7 +11,7 @@
 
 <h1>Уважаемый, <?= $user["name"]; ?></h1>
 <ul>
-    <?php foreach (array($user_tasks) as $item): ?>
+    <?php foreach ($user_tasks as $item): ?>
         <li>У вас запланирована задача <?= htmlspecialchars($item["title"]); ?> на <?= $item["deadline"]; ?></li>
     <?php endforeach; ?>
 </ul>

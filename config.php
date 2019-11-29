@@ -8,3 +8,21 @@ $config = [
     // сайт доступен и работает
     "enable" => true
 ];
+
+$swiftMailerConfig = [
+    "user_name" => "9f02a757379c29",
+    "password" => "24872c91be709a",
+    "address" => "smtp.mailtrap.io",
+    "domain" => "smtp.mailtrap.io",
+    "port" => "2525",
+    "authentication" => "cram_md5"
+];
+
+/*
+$swiftMailerConfig = [
+    "domain" => "phpdemo.ru",
+    "port" => "25",
+    "user_name" => "keks@phpdemo.ru",
+    "password" => "htmlacademy",
+];
+*/
