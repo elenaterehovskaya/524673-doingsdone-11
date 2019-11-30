@@ -251,20 +251,20 @@ function isDateValid(string $date) : bool {
     return $dateTimeObj !== false && array_sum(date_get_last_errors()) === 0;
 }
 
-function sendMail(array $swiftMailerConfig, array $recipient, $msg_content) {
-    // Конфигурация траспорта: сообщения электронной почты отправляются по протоколу SMTP.
-    // Указываем данные для доступа к SMTP-серверу: адрес и логин с паролем
-    $transport = (new Swift_SmtpTransport($swiftMailerConfig["domain"], $swiftMailerConfig["port"]))
-        ->setUsername($swiftMailerConfig["user_name"])
-        ->setPassword($swiftMailerConfig["password"]);
+function sendMail(array $mailer_config, array $recipient, $msg_content) {
+    // Указываем данные для доступа к SMTP-серверу
+    $transport = (new Swift_SmtpTransport($mailer_config["domain"], $mailer_config["port"]))
+        ->setUsername($mailer_config["user_name"])
+        ->setPassword($mailer_config["password"])
+        ->setEncryption($mailer_config["encryption"]);
 
     // Создаём главный объект библиотеки SwiftMailer, ответственный за отправку сообщений.
     // Передаём туда созданный объект с SMTP-сервером
     $mailer = new Swift_Mailer($transport);
 
     // Формирование сообщения: установим параметры сообщения: тема, отправитель и получатель"
-    $message = (new Swift_Message("Уведомление от сервиса «Дела в порядке»"))
-        ->setFrom(["keks@phpdemo.ru" => "Дела в порядке"])
+    $message = (new Swift_Message($mailer_config["subject"]))
+        ->setFrom(["keks@phpdemo.ru" => $mailer_config["user_caption"]])
         ->setTo($recipient)
         ->setBody($msg_content, "text/html");
 
