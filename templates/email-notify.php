@@ -10,11 +10,11 @@
 <!-- Текст письма: Уважаемый, %имя пользователя%. У вас запланирована задача %имя задачи% на %время задачи% -->
 
 <table style="width:600px;border-collapse:collapse;border-spacing:0;background:#f9fafc;text-align:left;vertical-align:top">
-    <tbody style="padding-left:40px">
-        <tr><td style="padding-top:40px;padding-bottom:60px;vertical-align:middle">
+    <tbody>
+        <tr><td style="padding-top:40px;padding-bottom:60px;padding-left:40px">
             <img src="https://habrastorage.org/webt/mx/sg/31/mxsg31tpj_xjumdmbdkpywjv_i0.png" style="width:153px" alt="Логитип Дела в порядке">
         </td></tr
-        ><tr><td>
+        ><tr><td style="padding-left:40px">
             <div>
                 <p style="font:400 18px/1.5 'helvetica', 'arial', sans-serif;color:#502bbb;">Уважаемый, <?= $user["name"]; ?>!</p>
                 <span style="margin:0;padding-right:10px;font:400 16px/1.5 'helvetica', 'arial', sans-serif;line-height:1.4">У вас запланирована задача</span><img src="https://habrastorage.org/webt/1m/fh/te/1mfhtewdfxrcszj7wuuqzxdx2ae.png" style="width:13px" alt="Значок дедлайна">
@@ -25,7 +25,7 @@
                 </ul>
             </div>
         </td></tr>
-        <tr><td style="padding-top:80px;padding-bottom:15px">
+        <tr><td style="padding-top:80px;padding-bottom:15px;padding-left:40px">
             <p style="margin:0;font:14px/1.5 'helvetica', 'arial', sans-serif;color:#502bbb">© 2019, «Дела в порядке»</p>
             <p style="margin:0;font:14px/1.5 'helvetica', 'arial', sans-serif">Веб-приложение для удобного ведения списка дел.</p>
         </td></tr>
