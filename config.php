@@ -8,3 +8,15 @@ $config = [
     // сайт доступен и работает
     "enable" => true
 ];
+$yandexMailConfig = [
+    "user_name" => "testemaily@yandex.ru",
+    "password" => "WEB_web_WEB",
+    "domain" => "smtp.yandex.ru",
+    "port" => "587",
+    "encryption" => "tls",
+
+    "user_caption" => "Дела в порядке",
+    "subject" => "Уведомление от сервиса «Дела в порядке»",
+    "to" => "len-sh@yandex.ru"
+];
+

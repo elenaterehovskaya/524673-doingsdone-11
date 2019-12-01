@@ -251,6 +251,28 @@ function isDateValid(string $date) : bool {
     return $dateTimeObj !== false && array_sum(date_get_last_errors()) === 0;
 }
 
+function sendMail(array $mailer_config, array $recipient, $msg_content) {
+    // Указываем данные для доступа к SMTP-серверу
+    $transport = (new Swift_SmtpTransport($mailer_config["domain"], $mailer_config["port"]))
+        ->setUsername($mailer_config["user_name"])
+        ->setPassword($mailer_config["password"])
+        ->setEncryption($mailer_config["encryption"]);
+
+    // Создаём главный объект библиотеки SwiftMailer, ответственный за отправку сообщений.
+    // Передаём туда созданный объект с SMTP-сервером
+    $mailer = new Swift_Mailer($transport);
+
+    // Формирование сообщения: установим параметры сообщения: тема, отправитель и получатель"
+    $message = (new Swift_Message($mailer_config["subject"]))
+        ->setFrom([$mailer_config["user_name"] => $mailer_config["user_caption"]])
+        ->setTo([$mailer_config["to"] => "hi there!"])
+        ->setBody($msg_content, "text/html");
+
+    // Отправка сообщения
+    $result = $mailer->send($message);
+    return $result;
+}
+
 /**
  * Выводит информацию в удобочитаемом виде (предназначение — отладка кода)
  * @param mixed $value Ассоциативный или двумерный массив с данными

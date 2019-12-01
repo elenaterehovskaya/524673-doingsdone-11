@@ -86,14 +86,13 @@ SQL;
     $result = mysqli_query($link, $sql);
     $records_count = mysqli_num_rows($result);
 
-    if ($result === false || $records_count == 0) {
+    if ($result === false) {
         // Ошибка при выполнении SQL запроса
         $error_string = mysqli_error($link);
-
-        if ($records_count == 0) {
-            http_response_code(404);
-            $error_string = "Не найдено ни одной задачи для данного проекта!";
-        }
+    }
+    else if (isset($_GET["id"]) && $records_count == 0) {
+        http_response_code(404);
+        $error_string = "Не найдено ни одной задачи для данного проекта!";
     }
     else {
         // Получаем список из всех задач у текущего пользователя в виде двумерного массива
