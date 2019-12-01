@@ -8,15 +8,15 @@ $config = [
     // сайт доступен и работает
     "enable" => true
 ];
-
-$swiftMailerConfig = [
-    "user_name" => "9f02a757379c29",
-    "password" => "24872c91be709a",
-    "domain" => "smtp.mailtrap.io",
-    "port" => "2525",
+$yandexMailConfig = [
+    "user_name" => "testemaily@yandex.ru",
+    "password" => "WEB_web_WEB",
+    "domain" => "smtp.yandex.ru",
+    "port" => "587",
     "encryption" => "tls",
 
     "user_caption" => "Дела в порядке",
-    "subject" => "Уведомление от сервиса «Дела в порядке»"
+    "subject" => "Уведомление от сервиса «Дела в порядке»",
+    "to" => "len-sh@yandex.ru"
 ];
 

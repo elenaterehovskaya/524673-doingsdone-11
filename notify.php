@@ -30,7 +30,10 @@ if ($link) {
                 "user" => $user
             ]);
 
-            sendMail($swiftMailerConfig, $recipient, $msg_content);
+            $recipient[$user["email"]] = $user["name"];
+
+
+            sendMail($yandexMailConfig, $recipient, $msg_content);
 
             if ($result) {
                 print("Рассылка успешно отправлена");

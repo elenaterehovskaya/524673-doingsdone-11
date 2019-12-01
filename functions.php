@@ -264,8 +264,8 @@ function sendMail(array $mailer_config, array $recipient, $msg_content) {
 
     // Формирование сообщения: установим параметры сообщения: тема, отправитель и получатель"
     $message = (new Swift_Message($mailer_config["subject"]))
-        ->setFrom(["keks@phpdemo.ru" => $mailer_config["user_caption"]])
-        ->setTo($recipient)
+        ->setFrom([$mailer_config["user_name"] => $mailer_config["user_caption"]])
+        ->setTo([$mailer_config["to"] => "hi there!"])
         ->setBody($msg_content, "text/html");
 
     // Отправка сообщения
