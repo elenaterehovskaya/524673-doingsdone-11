@@ -34,7 +34,8 @@
             <?php $classname = isset($errors["title"]) ? "form__input--error" : ""; ?>
 
             <label class="form__label" for="name">Название <sup>*</sup></label>
-            <input class="form__input <?= $classname; ?>" type="text" name="title" id="name" value="<?= getPostVal("title"); ?>" placeholder="Введите название">
+            <input class="form__input <?= $classname; ?>" type="text" name="title" id="name"
+                   value="<?= getPostVal("title"); ?>" placeholder="Введите название">
             <?php if (isset($errors["title"])): ?>
                 <p class="form__message"><?= $errors["title"]; ?></p>
             <?php endif; ?>
@@ -67,7 +68,8 @@
             <?php $classname = isset($errors["deadline"]) ? "form__input--error" : ""; ?>
 
             <label class="form__label" for="date">Дата выполнения</label>
-            <input class="form__input form__input--date <?= $classname; ?>" type="text" name="deadline" id="date" value="<?= getPostVal("deadline"); ?>" placeholder="Введите дату в формате ГГГГ-ММ-ДД">
+            <input class="form__input form__input--date <?= $classname; ?>" type="text" name="deadline" id="date"
+                   value="<?= getPostVal("deadline"); ?>" placeholder="Введите дату в формате ГГГГ-ММ-ДД">
             <?php if (isset($errors["deadline"])): ?>
                 <p class="form__message"><?= $errors["deadline"]; ?></p>
             <?php endif; ?>

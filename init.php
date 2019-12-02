@@ -17,7 +17,8 @@ $mysqlConfig = [
 // Подключение к MySQL
 $link = mysqli_init();
 mysqli_options($link, MYSQLI_OPT_INT_AND_FLOAT_NATIVE, 1);
-mysqli_real_connect($link, $mysqlConfig["host"], $mysqlConfig["user"], $mysqlConfig["password"], $mysqlConfig["database"]);
+mysqli_real_connect($link, $mysqlConfig["host"], $mysqlConfig["user"], $mysqlConfig["password"],
+    $mysqlConfig["database"]);
 
 // Устанавливаем кодировку при работе с MySQL
 mysqli_set_charset($link, "utf8");

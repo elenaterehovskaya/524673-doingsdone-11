@@ -14,8 +14,7 @@ $user_id = $_SESSION["user"]["id"];
 if ($link === false) {
     // Ошибка подключения к MySQL
     $error_string = mysqli_connect_error();
-}
-else {
+} else {
     // SQL-запрос для получения списка проектов у текущего пользователя
     $sql = "SELECT id, name FROM projects WHERE user_id = " . $user_id;
     $result = mysqli_query($link, $sql);
@@ -23,8 +22,7 @@ else {
     if ($result === false) {
         // Ошибка при выполнении SQL запроса
         $error_string = mysqli_error($link);
-    }
-    else {
+    } else {
         // Получаем список проектов у текущего пользователя в виде двумерного массива
         $projects = mysqli_fetch_all($result, MYSQLI_ASSOC);
     }
@@ -61,8 +59,7 @@ SQL;
     if ($result === false) {
         // Ошибка при выполнении SQL запроса
         $error_string = mysqli_error($link);
-    }
-    else {
+    } else {
         // Получаем список из всех задач у текущего пользователя без привязки к проекту в виде двумерного массива
         $all_tasks = mysqli_fetch_all($result, MYSQLI_ASSOC);
     }
@@ -79,8 +76,7 @@ SQL;
     if (isset($_GET["id"])) {
         $project_id = intval($_GET["id"]);
         $sql .= " and p.id = $project_id ORDER BY t.id DESC";
-    }
-    else {
+    } else {
         $sql .= " ORDER BY t.id DESC";
     }
     $result = mysqli_query($link, $sql);
@@ -89,16 +85,16 @@ SQL;
     if ($result === false) {
         // Ошибка при выполнении SQL запроса
         $error_string = mysqli_error($link);
-    }
-    else if (isset($_GET["id"]) && $records_count == 0) {
-        http_response_code(404);
-        $error_string = "Не найдено ни одной задачи для данного проекта!";
-    }
-    else {
-        // Получаем список из всех задач у текущего пользователя в виде двумерного массива
-        $tasks = mysqli_fetch_all($result, MYSQLI_ASSOC);
-        // Добавляем в массив кол-во часов, оставшихся до даты окончания выполнения задач
-        $tasks = addHoursUntilEnd2Tasks($tasks);
+    } else {
+        if (isset($_GET["id"]) && $records_count == 0) {
+            http_response_code(404);
+            $error_string = "Не найдено ни одной задачи для данного проекта!";
+        } else {
+            // Получаем список из всех задач у текущего пользователя в виде двумерного массива
+            $tasks = mysqli_fetch_all($result, MYSQLI_ASSOC);
+            // Добавляем в массив кол-во часов, оставшихся до даты окончания выполнения задач
+            $tasks = addHoursUntilEndTask($tasks);
+        }
     }
 
     // Список задач, найденных по поисковому запросу с использование FULLTEXT поиска MySQL
@@ -124,14 +120,13 @@ SQL;
         if ($result === false) {
             // Ошибка при выполнении SQL запроса
             $error_string = mysqli_error($link);
-        }
-        else {
+        } else {
             $tasks_search = mysqli_fetch_all($result, MYSQLI_ASSOC);
             $records_count = mysqli_num_rows($result);
         }
 
         if ($records_count == 0) {
-            $search_message  = "Ничего не найдено по вашему запросу";
+            $search_message = "Ничего не найдено по вашему запросу";
         }
     }
 
@@ -150,26 +145,25 @@ SQL;
         if ($result === false) {
             // Ошибка при выполнении SQL запроса
             $error_string = mysqli_error($link);
-        }
-        else {
+        } else {
             $task_status = mysqli_fetch_assoc($result);
         }
 
-        if (isset($task_status["status"]))  {
+        if (isset($task_status["status"])) {
             if ($task_status["status"] === 0) {
                 $sql = "UPDATE tasks SET status = 1 WHERE id = $task_id and user_id = " . $user_id;
                 $result = mysqli_query($link, $sql);
-            }
-            else if ($task_status["status"] === 1) {
-                $sql = "UPDATE tasks SET status = 0 WHERE id = $task_id and user_id = " . $user_id;
-                $result = mysqli_query($link, $sql);
+            } else {
+                if ($task_status["status"] === 1) {
+                    $sql = "UPDATE tasks SET status = 0 WHERE id = $task_id and user_id = " . $user_id;
+                    $result = mysqli_query($link, $sql);
+                }
             }
 
             if ($result === false) {
                 // Ошибка при выполнении SQL запроса
                 $error_string = mysqli_error($link);
-            }
-            else {
+            } else {
                 header("Location: index.php");
                 exit();
             }
@@ -180,7 +174,7 @@ SQL;
     $filter = $_GET;
 
     if (isset($_GET["show_completed"])) {
-        $show_complete_tasks    = $_GET["show_completed"];
+        $show_complete_tasks = $_GET["show_completed"];
         $_GET["show_completed"] = intval(!(intval($_GET["show_completed"])));
     }
 
@@ -243,8 +237,7 @@ SQL;
 
 if ($error_string) {
     showMysqliError($page_content, $tpl_path, $error_string);
-}
-else {
+} else {
     $page_content = includeTemplate($tpl_path . "main.php", [
         "show_complete_tasks" => $show_complete_tasks,
         "url" => $url,

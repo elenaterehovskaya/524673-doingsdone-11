@@ -13,8 +13,7 @@ $user_id = $_SESSION["user"]["id"];
 if ($link === false) {
     // Ошибка подключения к MySQL
     $error_string = mysqli_connect_error();
-}
-else {
+} else {
     /*
      * SQL-запрос для получения списка проектов у текущего пользователя
      */
@@ -58,7 +57,7 @@ SQL;
         }
 
         $validateLength = validateLength($project["name"], 3, 15);
-        if ( $validateLength !== null ) {
+        if ($validateLength !== null) {
             $errors["name"] = $validateLength;
         }
 
@@ -101,8 +100,7 @@ SQL;
 
 if ($error_string) {
     showMysqliError($page_content, $tpl_path, $error_string);
-}
-else {
+} else {
     $page_content = includeTemplate($tpl_path . "form-project.php", [
         "projects" => $projects,
         "all_tasks" => $all_tasks

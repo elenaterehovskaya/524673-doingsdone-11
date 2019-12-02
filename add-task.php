@@ -105,17 +105,26 @@ SQL;
 
             if (isDateValid($data) === false) {
                 $errors["deadline"] = "Введите дату в формате ГГГГ-ММ-ДД";
-            } else if ($data < date("Y-m-d")) {
-                $errors["deadline"] = "Дата выполнения задачи должна быть больше или равна текущей";
             } else {
-                // Добавляем дату выполнения задачи в наш массив $task
-                $task["deadline"] = $data;
+                if ($data < date("Y-m-d")) {
+                    $errors["deadline"] = "Дата выполнения задачи должна быть больше или равна текущей";
+                } else {
+                    // Добавляем дату выполнения задачи в наш массив $task
+                    $task["deadline"] = $data;
+                }
             }
         }
 
         // Проверяем загрузил ли пользователь файл, получаем имя файла и его размер
         if (isset($_FILES["file"]) && $_FILES["file"]["name"] !== "") {
-            $white_list_files = ["image/jpeg", "image/png", "image/gif", "application/pdf", "application/msword", "text/plain"];
+            $white_list_files = [
+                "image/jpeg",
+                "image/png",
+                "image/gif",
+                "application/pdf",
+                "application/msword",
+                "text/plain"
+            ];
 
             $file_type = mime_content_type($_FILES["file"]["tmp_name"]);
             $file_name = $_FILES["file"]["name"];
@@ -124,17 +133,19 @@ SQL;
 
             if (!in_array($file_type, $white_list_files)) {
                 $errors["file"] = "Загрузите файл в формате .jpg, .png, .gif, .pdf, .doc или .txt";
-            } else if ($file_size > 500000) {
-                $errors["file"] = "Максимальный размер файла: 500Кб";
             } else {
-                // Сохраняем его в папке «uploads» и формируем ссылку на скачивание
-                $file_path = __DIR__ . "/uploads/";
-                $file_url = "/uploads/" . $file_name;
-                // Функция move_uploaded_file($current_path, $new_path) проверяет, что файл действительно загружен через форму
-                //и перемещает загруженный файл по новому адресу
-                move_uploaded_file($tmp_name, $file_path . $file_name);
-                // Добавляем название файла в наш массив $task
-                $task["file"] = $file_url;
+                if ($file_size > 500000) {
+                    $errors["file"] = "Максимальный размер файла: 500Кб";
+                } else {
+                    // Сохраняем его в папке «uploads» и формируем ссылку на скачивание
+                    $file_path = __DIR__ . "/uploads/";
+                    $file_url = "/uploads/" . $file_name;
+                    // Функция move_uploaded_file($current_path, $new_path) проверяет, что файл действительно загружен через форму
+                    //и перемещает загруженный файл по новому адресу
+                    move_uploaded_file($tmp_name, $file_path . $file_name);
+                    // Добавляем название файла в наш массив $task
+                    $task["file"] = $file_url;
+                }
             }
         }
         // Конец ВАЛИДАЦИИ ФОРМЫ

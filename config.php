@@ -16,7 +16,5 @@ $yandexMailConfig = [
     "encryption" => "tls",
 
     "user_caption" => "Дела в порядке",
-    "subject" => "Уведомление от сервиса «Дела в порядке»",
-    "to" => "len-sh@yandex.ru"
+    "subject" => "Уведомление от сервиса «Дела в порядке»"
 ];
-

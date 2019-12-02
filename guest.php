@@ -7,8 +7,7 @@ require_once("functions.php");
 if (isset($config["enable"])) {
     if ($config["enable"]) {
         $page_content = includeTemplate(($config["tpl_path"] . "guest.php"), []);
-    }
-    else {
+    } else {
         $page_content = includeTemplate(($config["tpl_path"] . "off.php"), []);
     }
 }

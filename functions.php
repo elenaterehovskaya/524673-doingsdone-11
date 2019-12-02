@@ -5,7 +5,8 @@
  * @param array $data Ассоциативный массив с данными для шаблона
  * @return string Итоговый HTML
  */
-function includeTemplate(string $name, array $data = []) {
+function includeTemplate(string $name, array $data = [])
+{
     $result = "";
 
     if (!is_readable($name)) {
@@ -23,17 +24,22 @@ function includeTemplate(string $name, array $data = []) {
 
 // Первый аргумент передается по ссылке (амперсанд), в этом случае функция будет работать
 // не с копией этой переменной, а изменять её значение напрямую
-function showMysqliError(&$page_content, $tpl_path, $error_string) {
+function showMysqliError(&$page_content, $tpl_path, $error_string)
+{
     $page_content = includeTemplate($tpl_path . "error.php", [
-        "error" => $error_string]);
+        "error" => $error_string
+    ]);
 }
 
-function showValidErrorRegister(&$page_content, $tpl_path, $errors) {
+function showValidErrorRegister(&$page_content, $tpl_path, $errors)
+{
     $page_content = includeTemplate($tpl_path . "form-register.php", [
-        "errors" => $errors]);
+        "errors" => $errors
+    ]);
 }
 
-function showValidErrorAuth(&$page_content, $tpl_path, $errors, $error_message) {
+function showValidErrorAuth(&$page_content, $tpl_path, $errors, $error_message)
+{
     $page_content = includeTemplate($tpl_path . "form-auth.php", [
         "errors" => $errors,
         "error_message" => $error_message
@@ -46,12 +52,13 @@ function showValidErrorAuth(&$page_content, $tpl_path, $errors, $error_message) 
  * @param array $item Двумерный массив с названиями проектов
  * @return int $count Количество задач внутри проекта
  */
-function getCountTasksProject(array $tasks, array $item) {
+function getCountTasksProject(array $tasks, array $item)
+{
     $count = 0;
 
     foreach ($tasks as $task) {
         if (isset($task["project"]) && isset($item["name"]) && $task["project"] == $item["name"]) {
-            $count ++;
+            $count++;
         }
     }
     return $count;
@@ -63,7 +70,8 @@ function getCountTasksProject(array $tasks, array $item) {
  * @param array $tasks Двумерный массив с данными для задач проекта
  * @return array Итоговый двумерный массив
  */
-function addHoursUntilEnd2Tasks(array $tasks) {
+function addHoursUntilEndTask(array $tasks)
+{
     foreach ($tasks as $task_key => $task) {
         if (isset($task["deadline"])) {
             $ts_end = strtotime($task["deadline"]);
@@ -83,7 +91,8 @@ function addHoursUntilEnd2Tasks(array $tasks) {
  * @param array $data Данные для вставки на место плейсхолдеров
  * @return mysqli_stmt Подготовленное выражение
  */
-function dbGetPrepareStmt($link, $sql, $data = []) {
+function dbGetPrepareStmt($link, $sql, $data = [])
+{
     $stmt = mysqli_prepare($link, $sql);
 
     if ($stmt === false) {
@@ -99,12 +108,14 @@ function dbGetPrepareStmt($link, $sql, $data = []) {
 
             if (is_int($value)) {
                 $type = "i";
-            }
-            else if (is_string($value)) {
-                $type = "s";
-            }
-            else if (is_double($value)) {
-                $type = "d";
+            } else {
+                if (is_string($value)) {
+                    $type = "s";
+                } else {
+                    if (is_double($value)) {
+                        $type = "d";
+                    }
+                }
             }
 
             if ($type) {
@@ -132,7 +143,8 @@ function dbGetPrepareStmt($link, $sql, $data = []) {
  * @param array $data Данные для вставки на место плейсхолдеров
  * @return array Двумерный массив с данными
  */
-function dbSelectData($link, $sql, $data = []) {
+function dbSelectData($link, $sql, $data = [])
+{
     $result = [];
     $stmt = dbGetPrepareStmt($link, $sql, $data);
     mysqli_stmt_execute($stmt);
@@ -151,7 +163,8 @@ function dbSelectData($link, $sql, $data = []) {
  * @param array $data Данные для вставки на место плейсхолдеров
  * @return bool|int|string Возвращает автоматически генерируемый ID
  */
-function dbInsertData($link, $sql, $data = []) {
+function dbInsertData($link, $sql, $data = [])
+{
     $stmt = dbGetPrepareStmt($link, $sql, $data);
     $result = mysqli_stmt_execute($stmt);
 
@@ -162,21 +175,27 @@ function dbInsertData($link, $sql, $data = []) {
 }
 
 /**
- * Получает значение поля после отправки формы
- * @param mixed $name Название параметра, значение которого получаем
- * @return mixed
+ * Получает значение поля после отправки формы методом POST
+ * @param string $name Название параметра, значение которого получаем
+ * @return string $name Название параметра
  */
-function getPostVal($name) {
+function getPostVal($name)
+{
     if (isset ($_POST[$name])) {
         $name = $_POST[$name];
-    }
-    else {
+    } else {
         $name = "";
     }
     return $name;
 }
 
-function getGetVal($name) {
+/**
+ * Получает значение поля после отправки формы методом GET
+ * @param string $name Название параметра, значение которого получаем
+ * @return string $name Название параметра
+ */
+function getGetVal($name)
+{
     return $_GET[$name] ?? "";
 }
 
@@ -187,7 +206,8 @@ function getGetVal($name) {
  * @param mixed $name Название параметра, значение которого получаем
  * @return mixed
  */
-function getInputPostVal($name) {
+function getInputPostVal($name)
+{
     return filter_input(INPUT_POST, $name);
 }
 
@@ -196,7 +216,8 @@ function getInputPostVal($name) {
  * @param string $value Значение поля ввода
  * @return string|null
  */
-function validateEmail($value) {
+function validateEmail($value)
+{
     if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
         return "E-mail введён некорректно";
     }
@@ -209,7 +230,8 @@ function validateEmail($value) {
  * @param array $values_list Массив значений
  * @return string|null
  */
-function validateValue($value, array $values_list) {
+function validateValue($value, array $values_list)
+{
     if (!in_array($value, $values_list)) {
         return "Выберите проект из раскрывающегося списка";
     }
@@ -223,7 +245,8 @@ function validateValue($value, array $values_list) {
  * @param int $max Максимальное значение символов
  * @return string|null
  */
-function validateLength($value, $min, $max) {
+function validateLength($value, $min, $max)
+{
     if ($value) {
         $length = mb_strlen($value);
         if ($length < $min or $length > $max) {
@@ -234,38 +257,51 @@ function validateLength($value, $min, $max) {
 }
 
 /**
- * Проверяет переданную дату на соответствие формату 'ГГГГ-ММ-ДД'
+ * Проверяет переданную дату на соответствие формату "ГГГГ-ММ-ДД"
  * Примеры использования:
- * is_date_valid('2019-01-01'); // true
- * is_date_valid('2016-02-29'); // true
- * is_date_valid('2019-04-31'); // false
- * is_date_valid('10.10.2010'); // false
- * is_date_valid('10/10/2010'); // false
+ * is_date_valid("2019-01-01"); // true
+ * is_date_valid("2016-02-29"); // true
+ * is_date_valid("2019-04-31"); // false
+ * is_date_valid("10.10.2010"); // false
+ * is_date_valid("10/10/2010"); // false
  * @param string $date Дата в виде строки
- * @return bool true при совпадении с форматом 'ГГГГ-ММ-ДД', иначе false
+ * @return bool true при совпадении с форматом "ГГГГ-ММ-ДД", иначе false
  */
-function isDateValid(string $date) : bool {
+function isDateValid(string $date): bool
+{
     $format_to_check = "Y-m-d";
     $dateTimeObj = date_create_from_format($format_to_check, $date);
 
     return $dateTimeObj !== false && array_sum(date_get_last_errors()) === 0;
 }
 
-function sendMail(array $mailer_config, array $recipient, $msg_content) {
-    // Указываем данные для доступа к SMTP-серверу
+/**
+ * Отправляет подготовленное электронное (email) сообщение
+ * @param array $mailer_config Ассоциативный массив с данными для доступа к SMTP-серверу и параметрами сообщения
+ * @param array $recipient Ассоциативный массив с данными получателя в виде [email => имя]
+ * @param string $msg_content Сообщение с html форматированием
+ * @return int
+ */
+function sendMail(array $mailer_config, array $recipient, $msg_content)
+{
+    // Класс SmtpTransport отвечает за способ отправки, содержит параметры доступа к SMTP-серверу
     $transport = (new Swift_SmtpTransport($mailer_config["domain"], $mailer_config["port"]))
         ->setUsername($mailer_config["user_name"])
         ->setPassword($mailer_config["password"])
         ->setEncryption($mailer_config["encryption"]);
 
+    // Конфигурвция транспорта
+    // Класс Mailer непосредственно отправляет сообщения электронной почты
     // Создаём главный объект библиотеки SwiftMailer, ответственный за отправку сообщений.
     // Передаём туда созданный объект с SMTP-сервером
     $mailer = new Swift_Mailer($transport);
 
+    // Формирование сообщения
+    // Класс Message содержит весь текст, тему, получателей и заголовки самого сообщения
     // Формирование сообщения: установим параметры сообщения: тема, отправитель и получатель"
     $message = (new Swift_Message($mailer_config["subject"]))
         ->setFrom([$mailer_config["user_name"] => $mailer_config["user_caption"]])
-        ->setTo([$mailer_config["to"] => "hi there!"])
+        ->setBcc($recipient)
         ->setBody($msg_content, "text/html");
 
     // Отправка сообщения
@@ -277,7 +313,8 @@ function sendMail(array $mailer_config, array $recipient, $msg_content) {
  * Выводит информацию в удобочитаемом виде (предназначение — отладка кода)
  * @param mixed $value Ассоциативный или двумерный массив с данными
  */
-function debug($value) {
+function debug($value)
+{
     print("<pre>");
     print_r($value);
     print("</pre>");

@@ -6,8 +6,7 @@ require_once("init.php");
 if ($link === false) {
     // Ошибка подключения к MySQL
     $error_string = mysqli_connect_error();
-}
-else {
+} else {
     // Страница запрошена методом POST
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $user_guest = $_POST;
@@ -28,8 +27,7 @@ else {
 
         if (count($errors)) {
             $error_message = "Пожалуйста, исправьте ошибки в форме";
-        }
-        else {
+        } else {
             $error_message = "Вы ввели неверный email/пароль";
         }
 
@@ -56,8 +54,7 @@ else {
 
 if ($error_string) {
     showMysqliError($page_content, $tpl_path, $error_string);
-}
-else {
+} else {
     showValidErrorAuth($page_content, $tpl_path, $errors, $error_message);
 }
 

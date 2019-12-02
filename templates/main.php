@@ -31,7 +31,8 @@
     <!-- Поиск по задачам -->
     <form class="search-form" action="/" method="get" autocomplete="off">
         <label>
-        <input class="search-form__input" type="text" name="q" value="<?= htmlspecialchars(getGetVal("q")); ?>" placeholder="Поиск по задачам">
+            <input class="search-form__input" type="text" name="q" value="<?= htmlspecialchars(getGetVal("q")); ?>"
+                   placeholder="Поиск по задачам">
         </label>
         <input class="search-form__submit" type="submit" name="" value="Искать">
     </form>
@@ -39,12 +40,12 @@
         <ul class="search-result__list">
             <?php foreach ($tasks_search as $item): ?>
                 <li class="search-result__item">
-                <?php if (isset($item["project_id"])): ?>
+                    <?php if (isset($item["project_id"])): ?>
                     <a class="search-result__link" href="/?id=<?= $item["project_id"]; ?>">
-                <?php endif; ?>
-                    <?php if (isset($item["title"])): ?>
-                        <?= htmlspecialchars($item["title"]); ?>
-                    <?php endif; ?>
+                        <?php endif; ?>
+                        <?php if (isset($item["title"])): ?>
+                            <?= htmlspecialchars($item["title"]); ?>
+                        <?php endif; ?>
                     </a>
                     <span class="search-result__text">
                         <?php if (isset($item["project"])): ?>
@@ -74,12 +75,12 @@
 
         <label class="checkbox">
             <?php $linkPart = "";
-            if (mb_strpos($url, 'show_completed') === false){
+            if (mb_strpos($url, 'show_completed') === false) {
                 $reverse_complete_tasks = intval(!$show_complete_tasks);
                 $linkPart = "&show_completed={$reverse_complete_tasks}";
             }
             ?>
-            <a href="<?=$url.$linkPart?>">
+            <a href="<?= $url . $linkPart ?>">
                 <input class="checkbox__input visually-hidden show_completed" type="checkbox"
                     <?php if ($show_complete_tasks == 1): ?>
                         checked

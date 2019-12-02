@@ -6,8 +6,7 @@ require_once("init.php");
 if ($link === false) {
     // Ошибка подключения к MySQL
     $error_string = mysqli_connect_error();
-}
-else {
+} else {
     // Страница запрошена методом POST
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // В массиве $user будут все значения полей из массива POST
@@ -19,10 +18,10 @@ else {
         $errors = [];
 
         $rules = [
-            "email" => function($value) {
+            "email" => function ($value) {
                 return validateEmail($value);
             },
-            "name" => function($value) {
+            "name" => function ($value) {
                 return validateLength($value, 4, 20);
             }
         ];
@@ -50,12 +49,10 @@ else {
             if ($result === false) {
                 // Ошибка при выполнении SQL запроса
                 $error_string = mysqli_error($link);
-            }
-            else {
+            } else {
                 if (mysqli_num_rows($result) > 0) {
                     $errors["email"] = "Указанный email уже используется другим пользователем";
-                }
-                else {
+                } else {
                     // Добавим нового пользователя в БД. Чтобы не хранить пароль в открытом виде преобразуем его в хеш
                     $password = password_hash($user["password"], PASSWORD_DEFAULT);
 
@@ -65,8 +62,7 @@ else {
                     if ($result === false) {
                         // Ошибка при выполнении SQL запроса
                         $error_string = mysqli_error($link);
-                    }
-                    else {
+                    } else {
                         // Если запрос выполнен успешно, переадресовываем пользователя на главную страницу
                         header("Location: auth.php");
                         exit();
@@ -79,8 +75,7 @@ else {
 
 if ($error_string) {
     showMysqliError($page_content, $tpl_path, $error_string);
-}
-else {
+} else {
     showValidErrorRegister($page_content, $tpl_path, $errors);
 }
 
