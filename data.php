@@ -1,6 +1,4 @@
 <?php
-date_default_timezone_set("Europe/Moscow");
-
 // Название папки с шаблонами
 $tpl_path = "templates/";
 
@@ -31,9 +29,11 @@ $error_string = "";
 // Массив с ошибками при отправке формы
 $errors = [];
 
-// Для показа завершённых задач
-$show_complete_tasks = "0";
-
+// Для показа выполненных задач
+$show_complete_tasks = "";
 $url = "";
+$url_link = "";
 
+// Данные пользователя и список задач для e-mail рассылки
+$user_data = [];
 $user_tasks = [];
