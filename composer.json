@@ -9,6 +9,8 @@
         }
     ],
     "require": {
+        "ext-mysqli": "*",
+        "ext-fileinfo": "*",
         "swiftmailer/swiftmailer": "^6.2"
     }
 }
