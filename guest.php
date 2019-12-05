@@ -1,5 +1,5 @@
 <?php
-require_once('config.php');
+require_once("config.php");
 require_once("data.php");
 require_once("functions.php");
 
@@ -12,11 +12,10 @@ if (isset($config["enable"])) {
     }
 }
 
-// Подключаем «Лейаут» и передаём: HTML-код основного содержимого страницы и title для страницы
 $layout_content = includeTemplate($tpl_path . "layout.php", [
     "content" => $page_content,
     "title" => "Дела в порядке | Гостевая страница",
-    "config" => $config // проброс переменной $config
+    "config" => $config
 ]);
 
 print($layout_content);

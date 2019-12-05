@@ -1,10 +1,9 @@
 <?php
 require_once("init.php");
 
-// Если пользователь не вошёл в систему (т.е. нет о нем информации в сессии), переходим на гостевую страницу и выходим
 if (!isset($_SESSION["user"])) {
     header("location: /guest.php");
-    exit;
+    exit();
 }
 
 $user = $_SESSION["user"];
@@ -12,7 +11,6 @@ $user_id = $_SESSION["user"]["id"];
 
 // Проверяем подключение и выполняем запросы
 if ($link === false) {
-    // Ошибка подключения к MySQL
     $error_string = mysqli_connect_error();
 } else {
     // SQL-запрос для получения списка проектов у текущего пользователя
@@ -20,33 +18,30 @@ if ($link === false) {
     $result = mysqli_query($link, $sql);
 
     if ($result === false) {
-        // Ошибка при выполнении SQL запроса
         $error_string = mysqli_error($link);
     } else {
-        // Получаем список проектов у текущего пользователя в виде двумерного массива
         $projects = mysqli_fetch_all($result, MYSQLI_ASSOC);
     }
 
     // Проверяем для нашего текущего ID проекта из адресной строки его существование в наших проектах
     if (isset($_GET["id"])) {
         $project_id = intval($_GET["id"]);
-        $weFindProject = false;
+        $project_find = false;
 
         foreach ($projects as $key => $value) {
             if ($project_id === $value["id"]) {
-                $weFindProject = true;
+                $project_find = true;
                 break;
             }
         }
 
-        if ($weFindProject === false) {
-            // Ошибка: значения параметра запроса не существует
+        if ($project_find === false) {
             http_response_code(404);
-            $error_string = "Не найдено проекта с таким ID!";
+            $error_string = "Не найдено проекта с таким ID";
         }
     }
 
-    // SQL-запрос для получения списка из всех задач у текущего пользователя без привязки к проекту
+    // SQL-запрос для получения списка всех задач у текущего пользователя
     $sql = <<<SQL
     SELECT t.id, t.user_id, p.name AS project, t.title
     FROM tasks t
@@ -57,14 +52,12 @@ SQL;
     $result = mysqli_query($link, $sql);
 
     if ($result === false) {
-        // Ошибка при выполнении SQL запроса
         $error_string = mysqli_error($link);
     } else {
-        // Получаем список из всех задач у текущего пользователя без привязки к проекту в виде двумерного массива
         $all_tasks = mysqli_fetch_all($result, MYSQLI_ASSOC);
     }
 
-    // SQL-запрос для получения списка всех задач у текущего пользователя
+    // SQL-запрос для получения списка всех задач у текущего пользователя для каждого проекта
     $sql = <<<SQL
     SELECT t.id, t.user_id, p.name AS project, t.title, t.file, t.deadline, t.status
     FROM tasks t
@@ -83,16 +76,13 @@ SQL;
     $records_count = mysqli_num_rows($result);
 
     if ($result === false) {
-        // Ошибка при выполнении SQL запроса
         $error_string = mysqli_error($link);
     } else {
         if (isset($_GET["id"]) && $records_count == 0) {
             http_response_code(404);
-            $error_string = "Не найдено ни одной задачи для данного проекта!";
+            $error_string = "Не найдено ни одной задачи для данного проекта";
         } else {
-            // Получаем список из всех задач у текущего пользователя в виде двумерного массива
             $tasks = mysqli_fetch_all($result, MYSQLI_ASSOC);
-            // Добавляем в массив кол-во часов, оставшихся до даты окончания выполнения задач
             $tasks = addHoursUntilEndTask($tasks);
         }
     }
@@ -101,8 +91,8 @@ SQL;
     $search = "";
     $tasks_serch = [];
 
-    if (isset($_GET["q"])) {
-        $search = trim(htmlspecialchars($_GET["q"]));
+    if (isset($_GET["query"])) {
+        $search = trim($_GET["query"]);
     }
 
     if ($search) {
@@ -111,14 +101,13 @@ SQL;
         FROM tasks t
         LEFT JOIN projects p ON t.project_id = p.id
         LEFT JOIN users u ON t.user_id = u.id
-        WHERE t.user_id = $user_id and MATCH(title) AGAINST(?); 
+        WHERE t.user_id = $user_id and MATCH(title) AGAINST(?)
 SQL;
         $stmt = dbGetPrepareStmt($link, $sql, [$search]);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
 
         if ($result === false) {
-            // Ошибка при выполнении SQL запроса
             $error_string = mysqli_error($link);
         } else {
             $tasks_search = mysqli_fetch_all($result, MYSQLI_ASSOC);
@@ -126,11 +115,82 @@ SQL;
         }
 
         if ($records_count == 0) {
+            http_response_code(404);
             $search_message = "Ничего не найдено по вашему запросу";
         }
     }
 
-    // Смена статуса выполнения задачи
+    // Блок сортировки задач (задачи на сегодня, на завтра, просроченные)
+    $show_complete_tasks = "1";
+    $url = "";
+    $url_link = "";
+
+    if (isset($_GET["show_completed"])) {
+        $show_complete_tasks = $_GET["show_completed"];
+        $_GET["show_completed"] = intval(!(intval($_GET["show_completed"])));
+    }
+
+    $scriptname = pathinfo(__FILE__, PATHINFO_BASENAME);
+    $query = http_build_query($_GET);
+    $url = "/" . $scriptname . "?" . $query;
+
+    if (mb_strpos($url, "show_completed") === false) {
+        $reverse_complete_tasks = intval(!$show_complete_tasks);
+        $url_link = "&show_completed={$reverse_complete_tasks}";
+    }
+
+    $filter = $_GET;
+
+    if (isset($filter["tab"])) {
+        if ($filter["tab"] === "today") {
+            // SQL-запрос для получения списка задач «Повестка дня»
+            $sql = <<<SQL
+    SELECT t.id, t.user_id, p.name AS project, t.title, t.file, t.deadline, t.status
+    FROM tasks t
+    LEFT JOIN projects p ON t.project_id = p.id
+    LEFT JOIN users u ON t.user_id = u.id
+    WHERE DATE(t.deadline) = DATE(NOW()) and t.user_id = $user_id
+SQL;
+            $result = mysqli_query($link, $sql);
+            if ($result === false) {
+                $error_string = mysqli_error($link);
+            }
+        }
+
+        if ($filter["tab"] === "tomorrow") {
+            // SQL-запрос для получения списка задач на «Завтра»
+            $sql = <<<SQL
+    SELECT t.id, t.user_id, p.name AS project, t.title, t.file, t.deadline, t.status
+    FROM tasks t
+    LEFT JOIN projects p ON t.project_id = p.id
+    LEFT JOIN users u ON t.user_id = u.id
+    WHERE DATE (t.deadline) = DATE(DATE_ADD(NOW(), INTERVAL 24 HOUR)) and t.user_id = $user_id
+SQL;
+            $result = mysqli_query($link, $sql);
+            if ($result === false) {
+                $error_string = mysqli_error($link);
+            }
+        }
+
+        if ($filter["tab"] === "past") {
+            // SQL-запрос для получения списка «Просроченные»
+            $sql = <<<SQL
+    SELECT t.id, t.user_id, p.name AS project, t.title, t.file, t.deadline, t.status
+    FROM tasks t
+    LEFT JOIN projects p ON t.project_id = p.id
+    LEFT JOIN users u ON t.user_id = u.id
+    WHERE DATE(t.deadline) < DATE(NOW()) and t.user_id = $user_id
+SQL;
+            $result = mysqli_query($link, $sql);
+            if ($result === false) {
+                $error_string = mysqli_error($link);
+            }
+        }
+        $tasks = mysqli_fetch_all($result, MYSQLI_ASSOC);
+        $tasks = addHoursUntilEndTask($tasks);
+    }
+
+    // Смена статуса выполнения задачи (выполнена -> не выполнена, не выполнена -> выполнена)
     $task_id = "";
     $task_status = [];
 
@@ -139,11 +199,11 @@ SQL;
     }
 
     if ($task_id) {
+        // SQL запрос на получение статуса выбранной задачи
         $sql = "SELECT id, status FROM tasks WHERE id = $task_id and user_id = " . $user_id;
         $result = mysqli_query($link, $sql);
 
         if ($result === false) {
-            // Ошибка при выполнении SQL запроса
             $error_string = mysqli_error($link);
         } else {
             $task_status = mysqli_fetch_assoc($result);
@@ -161,77 +221,19 @@ SQL;
             }
 
             if ($result === false) {
-                // Ошибка при выполнении SQL запроса
                 $error_string = mysqli_error($link);
+
             } else {
-                header("Location: index.php");
-                exit();
+                if (isset($_GET["tab"]) && $_GET["tab"] === "past") {
+                    header("Location: index.php?tab=past");
+                    exit();
+
+                } else {
+                    header("Location: index.php");
+                    exit();
+                }
             }
         }
-    }
-
-    // Блок фильтров, состоящий из ссылок для быстрой фильтрации задач
-    $filter = $_GET;
-
-    if (isset($_GET["show_completed"])) {
-        $show_complete_tasks = $_GET["show_completed"];
-        $_GET["show_completed"] = intval(!(intval($_GET["show_completed"])));
-    }
-
-    $scriptname = pathinfo(__FILE__, PATHINFO_BASENAME);
-    $query = http_build_query($_GET);
-    $url = "/" . $scriptname . "?" . $query;
-
-    if (isset($filter["f"])) {
-        if ($filter["f"] == "today") {
-            // SQL-запрос для получения списка задач «Повестка дня»
-            $sql = <<<SQL
-    SELECT t.id, t.user_id, p.name AS project, t.title, t.file, t.deadline, t.status
-    FROM tasks t
-    LEFT JOIN projects p ON t.project_id = p.id
-    LEFT JOIN users u ON t.user_id = u.id
-    WHERE DATE(t.deadline) = DATE(NOW()) and t.user_id = $user_id
-SQL;
-            $result = mysqli_query($link, $sql);
-            if ($result === false) {
-                // Ошибка при выполнении SQL запроса
-                $error_string = mysqli_error($link);
-            }
-        }
-
-        if ($filter["f"] == "tomorrow") {
-            // SQL-запрос для получения списка задач на «Завтра»
-            $sql = <<<SQL
-    SELECT t.id, t.user_id, p.name AS project, t.title, t.file, t.deadline, t.status
-    FROM tasks t
-    LEFT JOIN projects p ON t.project_id = p.id
-    LEFT JOIN users u ON t.user_id = u.id
-    WHERE DATE (t.deadline) = DATE(DATE_ADD(NOW(), INTERVAL 24 HOUR)) and t.user_id = $user_id
-SQL;
-            $result = mysqli_query($link, $sql);
-            if ($result === false) {
-                // Ошибка при выполнении SQL запроса
-                $error_string = mysqli_error($link);
-            }
-        }
-
-        if ($filter["f"] == "past") {
-            // SQL-запрос для получения списка «Просроченные»
-            $sql = <<<SQL
-    SELECT t.id, t.user_id, p.name AS project, t.title, t.file, t.deadline, t.status
-    FROM tasks t
-    LEFT JOIN projects p ON t.project_id = p.id
-    LEFT JOIN users u ON t.user_id = u.id
-    WHERE DATE(t.deadline) < DATE(NOW()) and t.user_id = $user_id
-SQL;
-            $result = mysqli_query($link, $sql);
-            if ($result === false) {
-                // Ошибка при выполнении SQL запроса
-                $error_string = mysqli_error($link);
-            }
-        }
-        $tasks = mysqli_fetch_all($result, MYSQLI_ASSOC);
-        $tasks = addHoursUntilEnd2Tasks($tasks);
     }
 }
 
@@ -241,6 +243,7 @@ if ($error_string) {
     $page_content = includeTemplate($tpl_path . "main.php", [
         "show_complete_tasks" => $show_complete_tasks,
         "url" => $url,
+        "url_link" => $url_link,
         "projects" => $projects,
         "all_tasks" => $all_tasks,
         "tasks" => $tasks,

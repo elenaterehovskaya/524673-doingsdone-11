@@ -1,11 +1,11 @@
 <?php
 require_once "vendor/autoload.php";
-require_once "config.php";
 require_once "init.php";
 
 // Проверяем подключение и выполняем запросы
 if ($link) {
-    // SQL запрос на получение всех невыполненных задач (статус равен нулю), у которых срок равен текущему дню
+    // SQL запрос на получение всех id пользователей у которых есть невыполненные задачи (статус равен нулю),
+    // срок выполнения которых равен текущему дню
     $sql = "SELECT user_id FROM tasks WHERE DATE(deadline) = DATE(NOW()) and status = 0 GROUP BY user_id";
     $result = mysqli_query($link, $sql);
 
@@ -13,25 +13,24 @@ if ($link) {
         $users_ids = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
         foreach ($users_ids as $value) {
+            // SQL запрос на получение данных по невыполненным задачам для каждого найденного пользователя
             $sql = "SELECT title, deadline FROM tasks WHERE DATE(deadline) = DATE(NOW()) and status = 0 and user_id = " . $value["user_id"];
             $result = mysqli_query($link, $sql);
             $user_tasks = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
+            // SQL запрос на получение данных о каждом найденном пользователе для отправки e-mail рассылки
             $sql = "SELECT email, name FROM users WHERE id = " . $value["user_id"];
             $result = mysqli_query($link, $sql);
-            $user = mysqli_fetch_assoc($result);
+            $user_data = mysqli_fetch_assoc($result);
 
             $recipient = [];
 
-            $recipient[$user["email"]] = $user["name"];
+            $recipient[$user_data["email"]] = $user_data["name"];
 
             $msg_content = includeTemplate($tpl_path . "email-notify.php", [
                 "user_tasks" => $user_tasks,
-                "user" => $user
+                "user_data" => $user_data
             ]);
-
-            $recipient[$user["email"]] = $user["name"];
-
 
             sendMail($yandexMailConfig, $recipient, $msg_content);
 
