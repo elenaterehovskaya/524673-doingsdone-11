@@ -22,30 +22,6 @@ function includeTemplate(string $name, array $data = [])
     return $result;
 }
 
-// Первый аргумент передается по ссылке (амперсанд), в этом случае функция будет работать
-// не с копией этой переменной, а изменять её значение напрямую
-function showMysqliError(&$page_content, $tpl_path, $error_string)
-{
-    $page_content = includeTemplate($tpl_path . "error.php", [
-        "error" => $error_string
-    ]);
-}
-
-function showValidErrorRegister(&$page_content, $tpl_path, $errors)
-{
-    $page_content = includeTemplate($tpl_path . "form-register.php", [
-        "errors" => $errors
-    ]);
-}
-
-function showValidErrorAuth(&$page_content, $tpl_path, $errors, $error_message)
-{
-    $page_content = includeTemplate($tpl_path . "form-auth.php", [
-        "errors" => $errors,
-        "error_message" => $error_message
-    ]);
-}
-
 /**
  * Подсчитывает количество задач внутри каждого проекта
  * @param array $tasks Двумерный массив с данными для задач проекта
@@ -91,7 +67,7 @@ function addHoursUntilEndTask(array $tasks)
  * @param array $data Данные для вставки на место плейсхолдеров
  * @return mysqli_stmt Подготовленное выражение
  */
-function dbGetPrepareStmt($link, $sql, $data = [])
+function dbGetPrepareStmt($link, $sql, array $data = [])
 {
     $stmt = mysqli_prepare($link, $sql);
 
@@ -137,13 +113,13 @@ function dbGetPrepareStmt($link, $sql, $data = [])
 }
 
 /**
- * Получает данные из MySQL
+ * Получает данные из MySQL с помощью подготовленного выражения
  * @param $link mysqli Ресурс соединения
  * @param $sql string SQL запрос с плейсхолдерами вместо значений
  * @param array $data Данные для вставки на место плейсхолдеров
  * @return array Двумерный массив с данными
  */
-function dbSelectData($link, $sql, $data = [])
+function dbSelectData($link, $sql, array $data = [])
 {
     $result = [];
     $stmt = dbGetPrepareStmt($link, $sql, $data);
@@ -161,54 +137,36 @@ function dbSelectData($link, $sql, $data = [])
  * @param $link mysqli Ресурс соединения
  * @param $sql string SQL запрос с плейсхолдерами вместо значений
  * @param array $data Данные для вставки на место плейсхолдеров
- * @return bool|int|string Возвращает автоматически генерируемый ID
+ * @return bool
  */
-function dbInsertData($link, $sql, $data = [])
+function dbInsertData($link, $sql, array $data = [])
 {
     $stmt = dbGetPrepareStmt($link, $sql, $data);
     $result = mysqli_stmt_execute($stmt);
 
-    if ($result) {
-        $result = mysqli_insert_id($link);
-    }
     return $result;
 }
 
 /**
- * Получает значение поля после отправки формы методом POST
- * @param string $name Название параметра, значение которого получаем
- * @return string $name Название параметра
- */
-function getPostVal($name)
-{
-    if (isset ($_POST[$name])) {
-        $name = $_POST[$name];
-    } else {
-        $name = "";
-    }
-    return $name;
-}
-
-/**
- * Получает значение поля после отправки формы методом GET
- * @param string $name Название параметра, значение которого получаем
- * @return string $name Название параметра
- */
-function getGetVal($name)
-{
-    return $_GET[$name] ?? "";
-}
-
-/**
- * Получает значение поля после отправки формы
- * функция filter_input получает значение параметра запроса без обращения к $_POST и проверки ключей
+ * Получает значение параметра запроса без обращения к $_POST и проверки ключей
  * INPUT_POST — константа для поиска в POST-параметрах
  * @param mixed $name Название параметра, значение которого получаем
  * @return mixed
  */
-function getInputPostVal($name)
+function getPostVal($name)
 {
     return filter_input(INPUT_POST, $name);
+}
+
+/**
+ * Получает значение параметра запроса без обращения к $_GET и проверки ключей
+ * INPUT_GET — константа для поиска в GET-параметрах
+ * @param mixed $name Название параметра, значение которого получаем
+ * @return mixed
+ */
+function getGetVal($name)
+{
+    return filter_input(INPUT_GET, $name);
 }
 
 /**
@@ -216,7 +174,7 @@ function getInputPostVal($name)
  * @param string $value Значение поля ввода
  * @return string|null
  */
-function validateEmail($value)
+function validateEmail(string $value)
 {
     if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
         return "E-mail введён некорректно";
@@ -245,7 +203,7 @@ function validateValue($value, array $values_list)
  * @param int $max Максимальное значение символов
  * @return string|null
  */
-function validateLength($value, $min, $max)
+function validateLength(string $value, int $min, int $max)
 {
     if ($value) {
         $length = mb_strlen($value);
@@ -276,29 +234,62 @@ function isDateValid(string $date): bool
 }
 
 /**
- * Отправляет подготовленное электронное (email) сообщение
- * @param array $mailer_config Ассоциативный массив с данными для доступа к SMTP-серверу и параметрами сообщения
- * @param array $recipient Ассоциативный массив с данными получателя в виде [email => имя]
- * @param string $msg_content Сообщение с html форматированием
- * @return int
+ * @param string $page_content HTML контент (шаблон показа ошибки + текст ошибки)
+ * @param string $tpl_path Путь к папке с шаблонами
+ * @param string $error_string Ошибка подключения к MySQL или Ошибка при выполнении SQL запроса
  */
-function sendMail(array $mailer_config, array $recipient, $msg_content)
+function showMysqliError(&$page_content, string $tpl_path, string $error_string)
 {
-    // Класс SmtpTransport отвечает за способ отправки, содержит параметры доступа к SMTP-серверу
+    $page_content = includeTemplate($tpl_path . "error.php", [
+        "error" => $error_string
+    ]);
+}
+
+/**
+ * @param string $page_content HTML контент (шаблон формы регистрации + ошибки валидации)
+ * @param string $tpl_path Путь к папке с шаблонами
+ * @param array $errors Двумерный массив с ошибками валидации
+ */
+function showValidErrorRegister(&$page_content, string $tpl_path, array $errors = [])
+{
+    $page_content = includeTemplate($tpl_path . "form-register.php", [
+        "errors" => $errors
+    ]);
+}
+
+/**
+ * @param string $page_content HTML контент (шаблон формы аутентификации + ошибки валидации)
+ * @param string $tpl_path Путь к папке с шаблонами
+ * @param array $errors Двумерный массив с ошибками валидации
+ * @param string $error_message Итоговое сообщение об ошибки валидации
+ */
+function showValidErrorAuth(&$page_content, string $tpl_path, string $error_message, array $errors = [])
+{
+    $page_content = includeTemplate($tpl_path . "form-auth.php", [
+        "error_message" => $error_message,
+        "errors" => $errors
+    ]);
+}
+
+/**
+ * Отправляет подготовленное электронное сообщение (e-mail рассылку)
+ * @param array $mailer_config Ассоциативный массив с данными для доступа к SMTP-серверу и параметрами сообщения
+ * @param array $recipient Ассоциативный массив с данными получателя в виде [e-mail => имя]
+ * @param string $msg_content Сообщение с HTML форматированием
+ * @return string E-mail рассылка
+ */
+function sendMail(array $mailer_config, array $recipient, string $msg_content)
+{
+    // Конфигурация транспорта: отвечает за способ отправки, содержит параметры доступа к SMTP-серверу
     $transport = (new Swift_SmtpTransport($mailer_config["domain"], $mailer_config["port"]))
         ->setUsername($mailer_config["user_name"])
         ->setPassword($mailer_config["password"])
         ->setEncryption($mailer_config["encryption"]);
 
-    // Конфигурвция транспорта
-    // Класс Mailer непосредственно отправляет сообщения электронной почты
-    // Создаём главный объект библиотеки SwiftMailer, ответственный за отправку сообщений.
-    // Передаём туда созданный объект с SMTP-сервером
+    // Главный объект библиотеки SwiftMailer, ответственный за отправку сообщений. Передаём туда созданный объект с SMTP-сервером
     $mailer = new Swift_Mailer($transport);
 
     // Формирование сообщения
-    // Класс Message содержит весь текст, тему, получателей и заголовки самого сообщения
-    // Формирование сообщения: установим параметры сообщения: тема, отправитель и получатель"
     $message = (new Swift_Message($mailer_config["subject"]))
         ->setFrom([$mailer_config["user_name"] => $mailer_config["user_caption"]])
         ->setBcc($recipient)
