@@ -2,9 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
 </head>
 <body>
 <table style="max-width:600px;width:100%;border-collapse:collapse;border-spacing:0;border:0;background-color:#f9fafc;text-align:left;vertical-align:top" role="presentation">
@@ -18,10 +16,9 @@
     <tr>
         <td style="padding-left:40px">
             <div>
-                <p style="font:400 18px/1.5 'helvetica', 'arial', sans-serif;color:#502bbb;">Уважаемый(ая) <?= $user["name"]; ?>!</p>
+                <p style="font:400 18px/1.5 'helvetica', 'arial', sans-serif;color:#502bbb;">Уважаемый(ая) <?= htmlspecialchars($user_data["name"]); ?>!</p>
                 <span style="margin:0;padding-right:8px;font:400 16px/1.5 'helvetica', 'arial', sans-serif;line-height:1.4">У вас запланирована задача</span>
-                <img src="https://habrastorage.org/webt/1m/fh/te/1mfhtewdfxrcszj7wuuqzxdx2ae.png" alt="Значок дедлайна"
-                     width="13" height="14">
+                <img src="https://habrastorage.org/webt/1m/fh/te/1mfhtewdfxrcszj7wuuqzxdx2ae.png" width="13" height="14">
                 <ul style="margin:0;padding-left:40px;font:400 16px/1.5 'helvetica', 'arial', sans-serif;line-height:1.4">
                     <?php foreach ($user_tasks as $item): ?>
                         <li><?= htmlspecialchars($item["title"]); ?> на <?= htmlspecialchars(date("d.m.Y",

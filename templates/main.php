@@ -4,11 +4,11 @@
     <nav class="main-navigation">
         <ul class="main-navigation__list">
             <?php foreach ($projects as $item): ?>
-                <li class="main-navigation__list-item
-                    <?php if (isset($item["id"]) && isset($_GET["id"]) && $item["id"] === intval($_GET["id"])): ?>
-                        main-navigation__list-item--active
-                    <?php endif; ?>
-                ">
+
+                <?php $classname = isset($item["id"]) && isset($_GET["id"]) && $item["id"] === intval($_GET["id"]) ?
+                    "main-navigation__list-item--active" : ""; ?>
+                <li class="main-navigation__list-item <?= $classname; ?>">
+
                     <a class="main-navigation__list-item-link" href="/?id=<?= $item["id"]; ?>">
                         <?php if (isset($item["name"])): ?>
                             <?= htmlspecialchars($item["name"]); ?>
@@ -31,22 +31,24 @@
     <!-- Поиск по задачам -->
     <form class="search-form" action="/" method="get" autocomplete="off">
         <label>
-            <input class="search-form__input" type="text" name="q" value="<?= htmlspecialchars(getGetVal("q")); ?>"
+            <input class="search-form__input" type="text" name="query" value="<?= getGetVal("query"); ?>"
                    placeholder="Поиск по задачам">
         </label>
         <input class="search-form__submit" type="submit" name="" value="Искать">
     </form>
+
     <div class="search-result">
         <ul class="search-result__list">
             <?php foreach ($tasks_search as $item): ?>
                 <li class="search-result__item">
+
                     <?php if (isset($item["project_id"])): ?>
-                    <a class="search-result__link" href="/?id=<?= $item["project_id"]; ?>">
-                        <?php endif; ?>
+                        <a class="search-result__link" href="/?id=<?= $item["project_id"]; ?>">
+                    <?php endif; ?>
                         <?php if (isset($item["title"])): ?>
                             <?= htmlspecialchars($item["title"]); ?>
                         <?php endif; ?>
-                    </a>
+                        </a>
                     <span class="search-result__text">
                         <?php if (isset($item["project"])): ?>
                             <?= htmlspecialchars($item["project"]); ?>
@@ -55,32 +57,27 @@
                 </li>
             <?php endforeach; ?>
         </ul>
+
         <p class="error-message"><?= $search_message ?></p>
     </div>
 
     <div class="tasks-controls">
         <nav class="tasks-switch">
-            <?php $classname = (!isset($_GET["f"])) ? "tasks-switch__item--active" : ""; ?>
-            <a href="/" class="tasks-switch__item <?= $classname; ?>">Все задачи</a>
+            <?php $classname = !isset($_GET["tab"]) ? "tasks-switch__item--active" : ""; ?>
+            <a class="tasks-switch__item <?= $classname; ?>" href="/">Все задачи</a>
 
-            <?php $classname = (isset($_GET["f"]) && $_GET["f"] == "today") ? "tasks-switch__item--active" : ""; ?>
-            <a href="/?f=today" class="tasks-switch__item <?= $classname; ?>">Повестка дня</a>
+            <?php $classname = isset($_GET["tab"]) && $_GET["tab"] == "today" ? "tasks-switch__item--active" : ""; ?>
+            <a class="tasks-switch__item <?= $classname; ?>" href="/?tab=today">Повестка дня</a>
 
-            <?php $classname = (isset($_GET["f"]) && $_GET["f"] == "tomorrow") ? "tasks-switch__item--active" : ""; ?>
-            <a href="/?f=tomorrow" class="tasks-switch__item <?= $classname; ?>">Завтра</a>
+            <?php $classname = isset($_GET["tab"]) && $_GET["tab"] == "tomorrow" ? "tasks-switch__item--active" : ""; ?>
+            <a class="tasks-switch__item <?= $classname; ?>" href="/?tab=tomorrow">Завтра</a>
 
-            <?php $classname = (isset($_GET["f"]) && $_GET["f"] == "past") ? "tasks-switch__item--active" : ""; ?>
-            <a href="/?f=past" class="tasks-switch__item <?= $classname; ?>">Просроченные</a>
+            <?php $classname = isset($_GET["tab"]) && $_GET["tab"] == "past" ? "tasks-switch__item--active" : ""; ?>
+            <a class="tasks-switch__item <?= $classname; ?>" href="/?tab=past">Просроченные</a>
         </nav>
 
         <label class="checkbox">
-            <?php $linkPart = "";
-            if (mb_strpos($url, 'show_completed') === false) {
-                $reverse_complete_tasks = intval(!$show_complete_tasks);
-                $linkPart = "&show_completed={$reverse_complete_tasks}";
-            }
-            ?>
-            <a href="<?= $url . $linkPart ?>">
+            <a href="<?= $url . $url_link ?>">
                 <input class="checkbox__input visually-hidden show_completed" type="checkbox"
                     <?php if ($show_complete_tasks == 1): ?>
                         checked
@@ -93,22 +90,20 @@
 
     <table class="tasks">
         <?php foreach ($tasks as $item): ?>
-            <?php if ($show_complete_tasks == 0 && isset($item["status"]) && $item["status"]): ?>
+            <?php if (isset($item["status"]) && $item["status"] && $show_complete_tasks == 0): ?>
                 <?php continue; ?>
             <?php endif; ?>
-            <tr class="tasks__item task
-                <?php if (isset($item["status"]) && $item["status"]): ?>
-                    task--completed
-                <?php endif; ?>
-                <?php if (isset($item["hours_until_end"]) && $item["hours_until_end"] <= 24): ?>
-                    task--important
-                <?php endif; ?>
-            ">
+
+            <?php $classname1 = isset($item["status"]) && $item["status"] ? "task--completed" : ""; ?>
+            <?php $classname2 = isset($item["hours_until_end"]) && $item["hours_until_end"] <= 24 && $item["status"] == 0 ?
+                "task--important" : ""; ?>
+            <tr class="tasks__item task <?= $classname1; ?> <?= $classname2; ?>">
+
                 <td class="task__select">
                     <label class="checkbox task__checkbox">
-                        <?php if (isset($item["id"])): ?>
+                    <?php if (isset($item["id"])): ?>
                         <a href="/?task_id=<?= $item["id"]; ?>">
-                            <?php endif; ?>
+                    <?php endif; ?>
                             <input class="checkbox__input visually-hidden" type="checkbox"
                                 <?php if (isset($item["status"]) && $item["status"]): ?>
                                     checked

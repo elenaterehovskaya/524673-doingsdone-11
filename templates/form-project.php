@@ -4,11 +4,11 @@
     <nav class="main-navigation">
         <ul class="main-navigation__list">
             <?php foreach ($projects as $item): ?>
-                <li class="main-navigation__list-item
-                    <?php if (isset($item["id"]) && isset($_GET["id"]) && $item["id"] === intval($_GET["id"])): ?>
-                        main-navigation__list-item--active
-                    <?php endif; ?>
-                ">
+
+                <?php $classname = isset($item["id"]) && isset($_GET["id"]) && $item["id"] === intval($_GET["id"]) ?
+                    "main-navigation__list-item--active" : ""; ?>
+                <li class="main-navigation__list-item <?= $classname; ?>">
+
                     <a class="main-navigation__list-item-link" href="/?id=<?= $item["id"]; ?>">
                         <?php if (isset($item["name"])): ?>
                             <?= htmlspecialchars($item["name"]); ?>
@@ -31,11 +31,12 @@
     <form class="form" action="/add-project.php" method="post" autocomplete="off">
         <!-- Название -->
         <div class="form__row">
-            <?php $classname = isset($errors["name"]) ? "form__input--error" : ""; ?>
-
             <label class="form__label" for="project_name">Название <sup>*</sup></label>
+
+            <?php $classname = isset($errors["name"]) ? "form__input--error" : ""; ?>
             <input class="form__input <?= $classname; ?>" type="text" name="name" id="project_name"
                    value="<?= getPostVal("name"); ?>" placeholder="Введите название проекта">
+
             <?php if (isset($errors["name"])): ?>
                 <p class="form__message"><?= $errors["name"]; ?></p>
             <?php endif; ?>
