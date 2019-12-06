@@ -117,18 +117,17 @@ function dbGetPrepareStmt($link, $sql, array $data = [])
  * @param $link mysqli Ресурс соединения
  * @param $sql string SQL запрос с плейсхолдерами вместо значений
  * @param array $data Данные для вставки на место плейсхолдеров
- * @return array Двумерный массив с данными
+ * @return mixed $result Объект результата
  */
 function dbSelectData($link, $sql, array $data = [])
 {
-    $result = [];
+    // Формируем подготовленное выражение на основе SQL-запроса, ресурс соединения и массива со значениями
     $stmt = dbGetPrepareStmt($link, $sql, $data);
+    // Выполняем полученное выражение
     mysqli_stmt_execute($stmt);
+    // Получаем объект результата
     $result = mysqli_stmt_get_result($stmt);
 
-    if ($result) {
-        $result = mysqli_fetch_all($result, MYSQLI_ASSOC);
-    }
     return $result;
 }
 
@@ -137,11 +136,13 @@ function dbSelectData($link, $sql, array $data = [])
  * @param $link mysqli Ресурс соединения
  * @param $sql string SQL запрос с плейсхолдерами вместо значений
  * @param array $data Данные для вставки на место плейсхолдеров
- * @return bool
+ * @return bool $result
  */
 function dbInsertData($link, $sql, array $data = [])
 {
+    // Формируем подготовленное выражение на основе SQL-запроса, ресурс соединения и массива со значениями
     $stmt = dbGetPrepareStmt($link, $sql, $data);
+    // Выполняем полученное выражение
     $result = mysqli_stmt_execute($stmt);
 
     return $result;
