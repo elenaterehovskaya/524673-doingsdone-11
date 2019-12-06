@@ -101,11 +101,9 @@ SQL;
         FROM tasks t
         LEFT JOIN projects p ON t.project_id = p.id
         LEFT JOIN users u ON t.user_id = u.id
-        WHERE t.user_id = $user_id and MATCH(title) AGAINST(?)
+        WHERE t.user_id = $user_id and MATCH(title) AGAINST(?) ORDER BY t.id DESC
 SQL;
-        $stmt = dbGetPrepareStmt($link, $sql, [$search]);
-        mysqli_stmt_execute($stmt);
-        $result = mysqli_stmt_get_result($stmt);
+        $result = dbSelectData($link, $sql, [$search]);
 
         if ($result === false) {
             $error_string = mysqli_error($link);
@@ -149,7 +147,7 @@ SQL;
     FROM tasks t
     LEFT JOIN projects p ON t.project_id = p.id
     LEFT JOIN users u ON t.user_id = u.id
-    WHERE DATE(t.deadline) = DATE(NOW()) and t.user_id = $user_id
+    WHERE DATE(t.deadline) = DATE(NOW()) and t.user_id = $user_id ORDER BY t.id DESC
 SQL;
             $result = mysqli_query($link, $sql);
             if ($result === false) {
@@ -164,7 +162,7 @@ SQL;
     FROM tasks t
     LEFT JOIN projects p ON t.project_id = p.id
     LEFT JOIN users u ON t.user_id = u.id
-    WHERE DATE (t.deadline) = DATE(DATE_ADD(NOW(), INTERVAL 24 HOUR)) and t.user_id = $user_id
+    WHERE DATE (t.deadline) = DATE(DATE_ADD(NOW(), INTERVAL 24 HOUR)) and t.user_id = $user_id ORDER BY t.id DESC
 SQL;
             $result = mysqli_query($link, $sql);
             if ($result === false) {
@@ -179,7 +177,7 @@ SQL;
     FROM tasks t
     LEFT JOIN projects p ON t.project_id = p.id
     LEFT JOIN users u ON t.user_id = u.id
-    WHERE DATE(t.deadline) < DATE(NOW()) and t.user_id = $user_id
+    WHERE DATE(t.deadline) < DATE(NOW()) and t.user_id = $user_id ORDER BY t.id DESC
 SQL;
             $result = mysqli_query($link, $sql);
             if ($result === false) {
