@@ -11,15 +11,15 @@
     <link rel="stylesheet" href="/css/flatpickr.min.css">
 </head>
 
-<?php $classname = !isset($user) ? "body-background" : ""; ?>
-<body class="<?= $classname; ?>">
+<?php $className = !isset($user) ? "body-background" : ""; ?>
+<body class="<?= $className; ?>">
 
 <h1 class="visually-hidden">Дела в порядке</h1>
 
 <div class="page-wrapper">
 
-    <?php $classname = isset($user) ? "container--with-sidebar" : ""; ?>
-    <div class="container <?= $classname; ?>">
+    <?php $className = isset($user) ? "container--with-sidebar" : ""; ?>
+    <div class="container <?= $className; ?>">
 
         <?php if (!isset($_SESSION["user"])): ?>
             <header class="main-header">
@@ -53,7 +53,7 @@
             </header>
         <?php endif; ?>
 
-        <div class="content"><?= $content; ?></div>
+        <div class="content"><?= $pageContent; ?></div>
     </div>
 </div>
 
