@@ -50,11 +50,11 @@ function addHoursUntilEndTask(array $tasks)
 {
     foreach ($tasks as $task_key => $task) {
         if (isset($task["deadline"])) {
-            $ts_end = strtotime($task["deadline"]);
-            $ts_now = time();
-            $ts_diff = $ts_end - $ts_now;
-            $hours_until_end = floor($ts_diff / 3600);
-            $tasks[$task_key]["hours_until_end"] = $hours_until_end;
+            $tsEnd = strtotime($task["deadline"]);
+            $tsNow = time();
+            $tsDiff = $tsEnd - $tsNow;
+            $hoursUntilEnd = floor($tsDiff / 3600);
+            $tasks[$task_key]["hours_until_end"] = $hoursUntilEnd;
         }
     }
     return $tasks;
@@ -149,25 +149,25 @@ function dbInsertData($link, $sql, array $data = [])
 }
 
 /**
- * Получает значение параметра запроса без обращения к $_POST и проверки ключей
+ * Получает значение параметра запроса без обращения к $_POST
  * INPUT_POST — константа для поиска в POST-параметрах
  * @param mixed $name Название параметра, значение которого получаем
  * @return mixed
  */
 function getPostVal($name)
 {
-    return filter_input(INPUT_POST, $name);
+    return filter_input(INPUT_POST, $name, FILTER_SANITIZE_SPECIAL_CHARS);
 }
 
 /**
- * Получает значение параметра запроса без обращения к $_GET и проверки ключей
+ * Получает значение параметра запроса без обращения к $_GET
  * INPUT_GET — константа для поиска в GET-параметрах
  * @param mixed $name Название параметра, значение которого получаем
  * @return mixed
  */
 function getGetVal($name)
 {
-    return filter_input(INPUT_GET, $name);
+    return filter_input(INPUT_GET, $name, FILTER_SANITIZE_SPECIAL_CHARS);
 }
 
 /**
@@ -186,12 +186,12 @@ function validateEmail(string $value)
 /**
  * Проверяет, присутствует ли в массиве значение
  * @param mixed $value Искомое значение
- * @param array $values_list Массив значений
+ * @param array $valuesList Массив значений
  * @return string|null
  */
-function validateValue($value, array $values_list)
+function validateValue($value, array $valuesList)
 {
-    if (!in_array($value, $values_list)) {
+    if (!in_array($value, $valuesList)) {
         return "Выберите проект из раскрывающегося списка";
     }
     return null;
@@ -228,76 +228,80 @@ function validateLength(string $value, int $min, int $max)
  */
 function isDateValid(string $date): bool
 {
-    $format_to_check = "Y-m-d";
-    $dateTimeObj = date_create_from_format($format_to_check, $date);
+    $formatToCheck = "Y-m-d";
+    $dateTimeObj = date_create_from_format($formatToCheck, $date);
 
     return $dateTimeObj !== false && array_sum(date_get_last_errors()) === 0;
 }
 
 /**
- * @param string $page_content HTML контент (шаблон показа ошибки + текст ошибки)
- * @param string $tpl_path Путь к папке с шаблонами
- * @param string $error_string Ошибка подключения к MySQL или Ошибка при выполнении SQL запроса
+ * Показывает шаблон ошибки с текстом последней ошибки
+ * @param string $templatePath Путь к папке с шаблонами
+ * @param string $mysqlErrorMessage Ошибка подключения к MySQL или ошибка выполнения SQL запроса
+ * @return string HTML контент
  */
-function showMysqliError(&$page_content, string $tpl_path, string $error_string)
+function showMysqlError(string $templatePath, string $mysqlErrorMessage)
 {
-    $page_content = includeTemplate($tpl_path . "error.php", [
-        "error" => $error_string
+    return includeTemplate($templatePath . "error.php", [
+        "mysqlErrorMessage" => $mysqlErrorMessage
     ]);
 }
 
 /**
- * @param string $page_content HTML контент (шаблон формы регистрации + ошибки валидации)
- * @param string $tpl_path Путь к папке с шаблонами
- * @param array $errors Двумерный массив с ошибками валидации
+ * Показывает шаблон формы регистрации + ошибки валидации
+ * @param string $templatePath Путь к папке с шаблонами
+ * @param array $validErrors Двумерный массив с ошибками валидации
+ * @return string HTML контент
  */
-function showValidErrorRegister(&$page_content, string $tpl_path, array $errors = [])
+function showValidErrorRegister(string $templatePath, array $validErrors = [])
 {
-    $page_content = includeTemplate($tpl_path . "form-register.php", [
-        "errors" => $errors
+    return includeTemplate($templatePath . "form-register.php", [
+        "validErrors" => $validErrors
     ]);
 }
 
 /**
- * @param string $page_content HTML контент (шаблон формы аутентификации + ошибки валидации)
- * @param string $tpl_path Путь к папке с шаблонами
- * @param array $errors Двумерный массив с ошибками валидации
- * @param string $error_message Итоговое сообщение об ошибки валидации
+ * Показывает шаблон формы аутентификации + ошибки валидации
+ * @param string $templatePath Путь к папке с шаблонами
+ * @param array $validErrors Двумерный массив с ошибками валидации
+ * @param string $validErrorMessage Итоговое сообщение об ошибки валидации
+ * @return string HTML контент
  */
-function showValidErrorAuth(&$page_content, string $tpl_path, string $error_message, array $errors = [])
+function showValidErrorAuth(string $templatePath, string $validErrorMessage, array $validErrors = [])
 {
-    $page_content = includeTemplate($tpl_path . "form-auth.php", [
-        "error_message" => $error_message,
-        "errors" => $errors
+    return includeTemplate($templatePath . "form-auth.php", [
+        "validErrorMessage" => $validErrorMessage,
+        "validErrors" => $validErrors
     ]);
 }
 
 /**
  * Отправляет подготовленное электронное сообщение (e-mail рассылку)
- * @param array $mailer_config Ассоциативный массив с данными для доступа к SMTP-серверу и параметрами сообщения
+ * @param array $mailConfig Ассоциативный массив с данными для доступа к SMTP-серверу и параметрами сообщения
  * @param array $recipient Ассоциативный массив с данными получателя в виде [e-mail => имя]
- * @param string $msg_content Сообщение с HTML форматированием
- * @return string E-mail рассылка
+ * @param string $messageContent Сообщение с HTML форматированием
+ * @return string $result E-mail рассылка
  */
-function sendMail(array $mailer_config, array $recipient, string $msg_content)
+function sendMail(array $mailConfig, array $recipient, string $messageContent)
 {
     // Конфигурация транспорта: отвечает за способ отправки, содержит параметры доступа к SMTP-серверу
-    $transport = (new Swift_SmtpTransport($mailer_config["domain"], $mailer_config["port"]))
-        ->setUsername($mailer_config["user_name"])
-        ->setPassword($mailer_config["password"])
-        ->setEncryption($mailer_config["encryption"]);
+    $transport = (new Swift_SmtpTransport($mailConfig["domain"], $mailConfig["port"]))
+        ->setUsername($mailConfig["userName"])
+        ->setPassword($mailConfig["password"])
+        ->setEncryption($mailConfig["encryption"]);
 
-    // Главный объект библиотеки SwiftMailer, ответственный за отправку сообщений. Передаём туда созданный объект с SMTP-сервером
+    // Объект библиотеки SwiftMailer, отвечает за отправку сообщений. Передаём туда созданный объект с SMTP-сервером
     $mailer = new Swift_Mailer($transport);
 
     // Формирование сообщения
-    $message = (new Swift_Message($mailer_config["subject"]))
-        ->setFrom([$mailer_config["user_name"] => $mailer_config["user_caption"]])
-        ->setBcc($recipient)
-        ->setBody($msg_content, "text/html");
+    $message = (new Swift_Message($mailConfig["subject"]))
+        ->setFrom([$mailConfig["userName"] => $mailConfig["userCaption"]])
+        ->setBcc([$recipient])
+        ->setBody($messageContent, "text/html");
 
     // Отправка сообщения
     $result = $mailer->send($message);
+
     return $result;
 }
 

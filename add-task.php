@@ -7,20 +7,23 @@ if (!isset($_SESSION["user"])) {
 }
 
 $user = $_SESSION["user"];
-$user_id = $_SESSION["user"]["id"];
+$userId = intval($_SESSION["user"]["id"]);
 
-// Проверяем подключение и выполняем запросы
-if ($link === false) {
-    $error_string = mysqli_connect_error();
-} else {
+$mysqlErrorMessage = mysqli_connect_error();
+
+// Проверяем наличие ошибок подключения к MySQL и выполняем запросы
+if ($mysqlErrorMessage === null) {
+    $mysqlErrorMessage = "";
+
     // SQL-запрос для получения списка проектов у текущего пользователя
-    $sql = "SELECT id, name FROM projects WHERE user_id = " . $user_id;
-    $result = mysqli_query($link, $sql);
+    $sql = "SELECT id, name FROM projects WHERE user_id = " . $userId;
+    $projectsResult = mysqli_query($link, $sql);
 
-    if ($result === false) {
-        $error_string = mysqli_error($link);
+    if (!$projectsResult) {
+        $mysqlErrorMessage = mysqli_error($link);
     } else {
-        $projects = mysqli_fetch_all($result, MYSQLI_ASSOC);
+        // Cписок проектов у текущего пользователя в виде двумерного массива
+        $projects = mysqli_fetch_all($projectsResult, MYSQLI_ASSOC);
     }
 
     // SQL-запрос для получения списка всех задач у текущего пользователя
@@ -29,32 +32,37 @@ if ($link === false) {
     FROM tasks t
     LEFT JOIN projects p ON t.project_id = p.id 
     LEFT JOIN users u ON t.user_id = u.id
-    WHERE t.user_id = $user_id
+    WHERE t.user_id = $userId
 SQL;
-    $result = mysqli_query($link, $sql);
+    $tasksAllResult = mysqli_query($link, $sql);
 
-    if ($result === false) {
-        $error_string = mysqli_error($link);
+    if (!$tasksAllResult) {
+        $mysqlErrorMessage = mysqli_error($link);
     } else {
-        $all_tasks = mysqli_fetch_all($result, MYSQLI_ASSOC);
+        // Cписок всех задач у текущего пользователя в виде двумерного массива
+        $tasksAll = mysqli_fetch_all($tasksAllResult, MYSQLI_ASSOC);
     }
 
     // ПОЛУЧАЕМ из полей формы необходимые данные от пользователя, ПРОВЕРЯЕМ их и СОХРАНЯЕМ в БД
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-        $required = ["title", "project_id"];
-        $errors = [];
-        $projects_ids = [];
+        // ВАЛИДАЦИЯ формы
+        $requiredFields = ["title", "project_id"];
+        $validErrors = [];
+
+        // Создаём массив с ID проектов, и заносим его для проверки в функцию validateValue
+        $projectsIds = [];
 
         foreach ($projects as $key => $value) {
-            $projects_ids[] = $value["id"];
+            $projectsIds[] = $value["id"];
         }
-        $rules = [
+
+        $validRules = [
             "title" => function ($value) {
                 return validateLength($value, 5, 255);
             },
-            "project_id" => function ($value) use ($projects_ids) {
-                return validateValue($value, $projects_ids);
+            "project_id" => function ($value) use ($projectsIds) {
+                return validateValue($value, $projectsIds);
             }
         ];
 
@@ -71,27 +79,27 @@ SQL;
 
         // Применяем функции валидации ко всем полям формы. Результат работы функций записывается в массив ошибок
         foreach ($task as $key => $value) {
-            if (isset($rules[$key])) {
-                $rule = $rules[$key];
-                $errors[$key] = $rule($value);
+            if (isset($validRules[$key])) {
+                $rule = $validRules[$key];
+                $validErrors[$key] = $rule($value);
             }
 
-            if (in_array($key, $required) && empty($value)) {
-                $errors[$key] = "Это поле должно быть заполнено";
+            if (in_array($key, $requiredFields) && empty($value)) {
+                $validErrors[$key] = "Это поле должно быть заполнено";
             }
         }
         // Массив отфильтровываем, чтобы удалить пустые значения и оставить только сообщения об ошибках
-        $errors = array_filter($errors);
+        $validErrors = array_filter($validErrors);
 
         // Проверяем ввёл ли пользователь дату выполнения задачи и проверяем её на соответствие формату и текущей дате
         if (isset($_POST["deadline"])) {
             $data = $_POST["deadline"];
 
             if (isDateValid($data) === false) {
-                $errors["deadline"] = "Введите дату в формате ГГГГ-ММ-ДД";
+                $validErrors["deadline"] = "Введите дату в формате ГГГГ-ММ-ДД";
             } else {
                 if ($data < date("Y-m-d")) {
-                    $errors["deadline"] = "Дата выполнения задачи должна быть больше или равна текущей";
+                    $validErrors["deadline"] = "Дата выполнения задачи должна быть больше или равна текущей";
                 } else {
                     // Добавляем дату выполнения задачи в наш массив $task
                     $task["deadline"] = $data;
@@ -101,7 +109,7 @@ SQL;
 
         // Проверяем загрузил ли пользователь файл, получаем имя файла и его размер
         if (isset($_FILES["file"]) && $_FILES["file"]["name"] !== "") {
-            $white_list_files = [
+            $fileWhiteList = [
                 "image/jpeg",
                 "image/png",
                 "image/gif",
@@ -110,51 +118,54 @@ SQL;
                 "text/plain"
             ];
 
-            $file_type = mime_content_type($_FILES["file"]["tmp_name"]);
-            $file_name = $_FILES["file"]["name"];
-            $file_size = $_FILES["file"]["size"];
-            $tmp_name = $_FILES["file"]["tmp_name"];
+            $fileType = mime_content_type($_FILES["file"]["tmp_name"]);
+            $fileName = $_FILES["file"]["name"];
+            $fileSize = $_FILES["file"]["size"];
+            $tmpName = $_FILES["file"]["tmp_name"];
 
-            if (!in_array($file_type, $white_list_files)) {
-                $errors["file"] = "Загрузите файл в формате .jpg, .png, .gif, .pdf, .doc или .txt";
+            if (!in_array($fileType, $fileWhiteList)) {
+                $validErrors["file"] = "Загрузите файл в формате .jpg, .png, .gif, .pdf, .doc или .txt";
             } else {
-                if ($file_size > 500000) {
-                    $errors["file"] = "Максимальный размер файла: 500Кб";
+                if ($fileSize > 300000) {
+                    $validErrors["file"] = "Максимальный размер файла: 300Кб";
                 } else {
                     // Сохраняем его в папке «uploads» и формируем ссылку на скачивание
-                    $file_path = __DIR__ . "/uploads/";
-                    $file_url = "/uploads/" . $file_name;
+                    $filePath = __DIR__ . "/uploads/";
+                    $fileUrl = "/uploads/" . $fileName;
 
                     // Перемещает загруженный файл по новому адресу
-                    move_uploaded_file($tmp_name, $file_path . $file_name);
+                    move_uploaded_file($tmpName, $filePath . $fileName);
 
                     // Добавляем название файла в наш массив $task
-                    $task["file"] = $file_url;
+                    $task["file"] = $fileUrl;
                 }
             }
         }
+        // Конец ВАЛИДАЦИИ формы
 
-        // Проверяем длину массива с ошибками. Если он не пустой, показываем ошибки пользователю вместе с формой
-        if (count($errors)) {
-            $page_content = includeTemplate($tpl_path . "form-task.php", [
+        // Подсчитываем количество элементов массива с ошибками. Если он не пустой, показываем ошибки вместе с формой
+        if (count($validErrors)) {
+            $pageContent = includeTemplate($templatePath . "form-task.php", [
                 "projects" => $projects,
-                "all_tasks" => $all_tasks,
-                "errors" => $errors
+                "tasksAll" => $tasksAll,
+                "validErrors" => $validErrors
             ]);
-            $layout_content = includeTemplate($tpl_path . "layout.php", [
-                "content" => $page_content,
+
+            $layoutContent = includeTemplate($templatePath . "layout.php", [
+                "pageContent" => $pageContent,
                 "user" => $user,
                 "title" => "Дела в порядке | Добавление задачи"
             ]);
-            print($layout_content);
+
+            print($layoutContent);
             exit();
         } else {
-            // SQL-запрос на добавление новой задачи (на месте значений — знаки вопроса — плейсхолдеры)
-            $sql = "INSERT INTO tasks (user_id, title, project_id, deadline, file) VALUES ($user_id, ?, ?, ?, ?)";
-            $result = dbInsertData($link, $sql, $task);
+            // SQL-запрос на добавление новой задачи
+            $sql = "INSERT INTO tasks (user_id, title, project_id, deadline, file) VALUES ($userId, ?, ?, ?, ?)";
+            $taskNewResult = dbInsertData($link, $sql, $task);
 
-            if ($result === false) {
-                $error_string = mysqli_error($link);
+            if (!$taskNewResult) {
+                $mysqlErrorMessage = mysqli_error($link);
             } else {
                 header("Location: index.php");
                 exit();
@@ -163,19 +174,19 @@ SQL;
     }
 }
 
-if ($error_string) {
-    showMysqliError($page_content, $tpl_path, $error_string);
-} else {
-    $page_content = includeTemplate($tpl_path . "form-task.php", [
+$pageContent = showMysqlError($templatePath, $mysqlErrorMessage);
+
+if (!$mysqlErrorMessage) {
+    $pageContent = includeTemplate($templatePath . "form-task.php", [
         "projects" => $projects,
-        "all_tasks" => $all_tasks
+        "tasksAll" => $tasksAll
     ]);
 }
 
-$layout_content = includeTemplate($tpl_path . "layout.php", [
-    "content" => $page_content,
+$layoutContent = includeTemplate($templatePath . "layout.php", [
+    "pageContent" => $pageContent,
     "user" => $user,
     "title" => "Дела в порядке | Добавление задачи"
 ]);
 
-print($layout_content);
+print($layoutContent);

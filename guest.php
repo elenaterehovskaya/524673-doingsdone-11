@@ -6,16 +6,16 @@ require_once("functions.php");
 // Подключаем шаблон «Гостевой страницы»
 if (isset($config["enable"])) {
     if ($config["enable"]) {
-        $page_content = includeTemplate(($config["tpl_path"] . "guest.php"), []);
+        $pageContent = includeTemplate(($config["templatePath"] . "guest.php"), []);
     } else {
-        $page_content = includeTemplate(($config["tpl_path"] . "off.php"), []);
+        $pageContent = includeTemplate(($config["templatePath"] . "off.php"), []);
     }
 }
 
-$layout_content = includeTemplate($tpl_path . "layout.php", [
-    "content" => $page_content,
-    "title" => "Дела в порядке | Гостевая страница",
-    "config" => $config
+$layoutContent = includeTemplate($templatePath . "layout.php", [
+    "pageContent" => $pageContent,
+    "config" => $config,
+    "title" => "Дела в порядке | Гостевая страница"
 ]);
 
-print($layout_content);
+print($layoutContent);
