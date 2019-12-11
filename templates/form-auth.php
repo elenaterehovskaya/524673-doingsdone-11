@@ -11,12 +11,12 @@
         <div class="form__row">
             <label class="form__label" for="email">E-mail <sup>*</sup></label>
 
-            <?php $classname = isset($errors["email"]) ? "form__input--error" : ""; ?>
-            <input class="form__input <?= $classname; ?>" type="text" name="email" id="email"
+            <?php $className = isset($validErrors["email"]) ? "form__input--error" : ""; ?>
+            <input class="form__input <?= $className; ?>" type="text" name="email" id="email"
                    value="<?= getPostVal("email"); ?>" placeholder="Введите e-mail">
 
-            <?php if (isset($errors["email"])): ?>
-                <p class="form__message"><?= $errors["email"]; ?></p>
+            <?php if (isset($validErrors["email"])): ?>
+                <p class="form__message"><?= $validErrors["email"]; ?></p>
             <?php endif; ?>
         </div>
 
@@ -24,17 +24,17 @@
         <div class="form__row">
             <label class="form__label" for="password">Пароль <sup>*</sup></label>
 
-            <?php $classname = isset($errors["password"]) ? "form__input--error" : ""; ?>
-            <input class="form__input <?= $classname; ?>" type="password" name="password" id="password"
+            <?php $className = isset($validErrors["password"]) ? "form__input--error" : ""; ?>
+            <input class="form__input <?= $className; ?>" type="password" name="password" id="password"
                    value="" placeholder="Введите пароль">
 
-            <?php if (isset($errors["password"])): ?>
-                <p class="form__message"><?= $errors["password"]; ?></p>
+            <?php if (isset($validErrors["password"])): ?>
+                <p class="form__message"><?= $validErrors["password"]; ?></p>
             <?php endif; ?>
         </div>
 
         <div class="form__row form__row--controls">
-            <p class="error-message"><?= $error_message ?></p>
+            <p class="error-message"><?= $validErrorMessage; ?></p>
             <input class="button" type="submit" name="" value="Войти">
         </div>
     </form>

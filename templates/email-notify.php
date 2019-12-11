@@ -16,11 +16,11 @@
     <tr>
         <td style="padding-left:40px">
             <div>
-                <p style="font:400 18px/1.5 'helvetica', 'arial', sans-serif;color:#502bbb;">Уважаемый(ая) <?= htmlspecialchars($user_data["name"]); ?>!</p>
+                <p style="font:400 18px/1.5 'helvetica', 'arial', sans-serif;color:#502bbb;">Уважаемый(ая) <?= htmlspecialchars($dataUser["name"]); ?>!</p>
                 <span style="margin:0;padding-right:8px;font:400 16px/1.5 'helvetica', 'arial', sans-serif;line-height:1.4">У вас запланирована задача</span>
                 <img src="https://habrastorage.org/webt/1m/fh/te/1mfhtewdfxrcszj7wuuqzxdx2ae.png" width="13" height="14">
                 <ul style="margin:0;padding-left:40px;font:400 16px/1.5 'helvetica', 'arial', sans-serif;line-height:1.4">
-                    <?php foreach ($user_tasks as $item): ?>
+                    <?php foreach ($tasksUser as $item): ?>
                         <li><?= htmlspecialchars($item["title"]); ?> на <?= htmlspecialchars(date("d.m.Y",
                                 strtotime($item["deadline"]))); ?>.
                         </li>
