@@ -1,52 +1,56 @@
 <?php
 require_once("init.php");
 
-$mysqlErrorMessage = mysqli_connect_error();
+$title = "Дела в порядке | Авторизация на сайте";
 
-// Проверяем наличие ошибок подключения к MySQL и выполняем запросы
-if ($mysqlErrorMessage === null) {
-    $mysqlErrorMessage = "";
+// Подключение к MySQL
+$link = mysqlConnect($mysqlConfig);
 
-    // ПОЛУЧАЕМ из полей формы необходимые данные от пользователя, ПРОВЕРЯЕМ их и СОХРАНЯЕМ в БД
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+// Проверяем наличие ошибок подключения к MySQL и выводим их в шаблоне
+if ($link["success"] === 0) {
+    $pageContent = showTemplateWithError($templatePath, $link["errorCaption"], $link["errorMessage"]);
+    $layoutContent = showTemplateLayoutGuest($templatePath, $pageContent, $config, $title);
+    dumpAndDie($layoutContent);
+}
 
-        // ВАЛИДАЦИЯ формы
-        $userGuest = $_POST;
+$link = $link["link"];
 
-        $requiredFields = ["email", "password"];
-        $validErrors = [];
-        $validErrorMessage = "";
+// ПОЛУЧАЕМ из полей формы необходимые данные от пользователя, ПРОВЕРЯЕМ их и СОХРАНЯЕМ в БД
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $userGuest = $_POST;
 
-        if (!filter_var($userGuest["email"], FILTER_VALIDATE_EMAIL)) {
-            $validErrors["email"] = "E-mail введён некорректно";
+    $requiredFields = ["email", "password"];
+    $validErrors = [];
+    $validErrorMessage = "";
+
+    if (isset($userGuest["email"]) && !filter_var($userGuest["email"], FILTER_VALIDATE_EMAIL)) {
+        $validErrors["email"] = "E-mail введён некорректно";
+    }
+
+    foreach ($requiredFields as $field) {
+        if (empty($userGuest[$field])) {
+            $validErrors[$field] = "Это поле должно быть заполнено";
         }
+    }
 
-        foreach ($requiredFields as $field) {
-            if (empty($userGuest[$field])) {
-                $validErrors[$field] = "Это поле должно быть заполнено";
-            }
-        }
-
+    if (count($validErrors)) {
         $validErrorMessage = "Пожалуйста, исправьте ошибки в форме";
-
-        if (!count($validErrors)) {
-            $validErrorMessage = "Вы ввели неверный email/пароль";
-        }
-
-        // Находим в базе данных в таблице users пользователя с переданным e-mail
+    } else if (isset($userGuest["email"])) {
         $email = mysqli_real_escape_string($link, $userGuest["email"]);
-        $sql = "SELECT * FROM users WHERE email = '$email'";
-        $userGuestResult = mysqli_query($link, $sql);
 
-        if (!$userGuestResult) {
-            $mysqlErrorMessage = mysqli_error($link);
-        } else {
-            // Пользователь с переданным e-mail
-            $user = mysqli_fetch_array($userGuestResult, MYSQLI_ASSOC);
+        // Поиск в базе данных в таблице users пользователя с переданным e-mail
+        $user = dbGetUser($link, $email);
+        if ($user["success"] === 0) {
+            $pageContent = showTemplateWithError($templatePath, $user["errorCaption"], $user["errorMessage"]);
+            $layoutContent = showTemplateLayoutGuest($templatePath, $pageContent, $config, $title);
+            dumpAndDie($layoutContent);
         }
-        // Конец ВАЛИДАЦИИ формы
 
-        if (empty($validErrors) and $user) {
+        $user = $user["data"];
+
+        if (!$user) {
+            $validErrorMessage = "Вы ввели неверный email/пароль";
+        } else {
             // Проверяем, соответствует ли переданный пароль хешу
             if (password_verify($userGuest["password"], $user["password"])) {
                 $_SESSION["user"] = $user;
@@ -58,17 +62,14 @@ if ($mysqlErrorMessage === null) {
     }
 }
 
-$pageContent = showMysqlError($templatePath, $mysqlErrorMessage);
+$pageContent = showTemplateWithError($templatePath, $errorCaption, $errorMessage);
 
-if (!$mysqlErrorMessage) {
-    $pageContent = showValidErrorAuth($templatePath, $validErrorMessage, $validErrors);
+if (!$errorMessage) {
+    $pageContent = includeTemplate($templatePath . "form-auth.php", [
+        "validErrorMessage" => $validErrorMessage,
+        "validErrors" => $validErrors
+    ]);
 }
 
-$layoutContent = includeTemplate($templatePath . "layout.php", [
-    "pageContent" => $pageContent,
-    "config" => $config,
-    "user" => [],
-    "title" => "Дела в порядке | Авторизация на сайте"
-]);
-
+$layoutContent = showTemplateLayoutGuest($templatePath, $pageContent, $config, $title);
 print($layoutContent);

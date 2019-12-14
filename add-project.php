@@ -6,112 +6,99 @@ if (!isset($_SESSION["user"])) {
     exit();
 }
 
+$title = "Дела в порядке | Добавление проекта";
 $user = $_SESSION["user"];
 $userId = intval($_SESSION["user"]["id"]);
 
-$mysqlErrorMessage = mysqli_connect_error();
+// Подключение к MySQL
+$link = mysqlConnect($mysqlConfig);
 
-// Проверяем наличие ошибок подключения к MySQL и выполняем запросы
-if ($mysqlErrorMessage === null) {
-    $mysqlErrorMessage = "";
+// Проверяем наличие ошибок подключения к MySQL и выводим их в шаблоне
+if ($link["success"] === 0) {
+    $pageContent = showTemplateWithError($templatePath, $link["errorCaption"], $link["errorMessage"]);
+    $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
+    dumpAndDie($layoutContent);
+}
 
-    // SQL-запрос для получения списка проектов у текущего пользователя
-    $sql = "SELECT id, name FROM projects WHERE user_id = " . $userId;
-    $projectsResult = mysqli_query($link, $sql);
+$link = $link["link"];
 
-    if (!$projectsResult) {
-        $mysqlErrorMessage = mysqli_error($link);
-    } else {
-        // Cписок проектов у текущего пользователя в виде двумерного массива
-        $projects = mysqli_fetch_all($projectsResult, MYSQLI_ASSOC);
+// Список проектов у текущего пользователя
+$projects = dbGetProjects($link, $userId);
+if ($projects["success"] === 0) {
+    $pageContent = showTemplateWithError($templatePath,  $projects["errorCaption"], $projects["errorMessage"]);
+    $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
+    dumpAndDie($layoutContent);
+}
+
+$projects = $projects["data"];
+
+// Список всех задач у текущего пользователя
+$tasksAll = dbGetTasks($link, $userId);
+if ($tasksAll["success"] === 0) {
+    $pageContent = showTemplateWithError($templatePath, $tasksAll["errorCaption"], $tasksAll["errorMessage"]);
+    $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
+    dumpAndDie($layoutContent);
+}
+
+$tasksAll = $tasksAll["data"];
+
+// ПОЛУЧАЕМ из полей формы необходимые данные от пользователя, ПРОВЕРЯЕМ их и СОХРАНЯЕМ в БД
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+    // ВАЛИДАЦИЯ формы
+    $project = $_POST;
+    $validErrors = [];
+
+    if (empty($project["name"])) {
+        $validErrors["name"] = "Это поле должно быть заполнено";
     }
 
-    // SQL-запрос для получения списка всех задач у текущего пользователя
-    $sql = <<<SQL
-    SELECT t.id, t.user_id, p.id AS project_id, p.name AS project, t.title, t.deadline, t.status 
-    FROM tasks t
-    LEFT JOIN projects p ON t.project_id = p.id 
-    LEFT JOIN users u ON t.user_id = u.id
-    WHERE t.user_id = $userId
-SQL;
-    $tasksAllResult = mysqli_query($link, $sql);
-
-    if (!$tasksAllResult) {
-        $mysqlErrorMessage = mysqli_error($link);
-    } else {
-        // Cписок всех задач у текущего пользователя в виде двумерного массива
-        $tasksAll = mysqli_fetch_all($tasksAllResult, MYSQLI_ASSOC);
+    $validateLength = validateLength($project["name"], 3, 15);
+    if ($validateLength !== null) {
+        $validErrors["name"] = $validateLength;
     }
 
-    // ПОЛУЧАЕМ из полей формы необходимые данные от пользователя, ПРОВЕРЯЕМ их и СОХРАНЯЕМ в БД
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
-        // ВАЛИДАЦИЯ формы
-        $project = $_POST;
-        $validErrors = [];
-
-        if (empty($project["name"])) {
-            $validErrors["name"] = "Это поле должно быть заполнено";
-        }
-
-        $validateLength = validateLength($project["name"], 3, 15);
-        if ($validateLength !== null) {
-            $validErrors["name"] = $validateLength;
-        }
-
-        foreach ($projects as $value) {
-            if (isset($project["name"])) {
-                if (mb_strtoupper($project["name"]) === mb_strtoupper($value["name"])) {
-                    $validErrors["name"] = "Проект с таким названием уже существует";
-                }
+    foreach ($projects as $value) {
+        if (isset($project["name"])) {
+            if (mb_strtoupper($project["name"]) === mb_strtoupper($value["name"])) {
+                $validErrors["name"] = "Проект с таким названием уже существует";
             }
         }
-        // Конец ВАЛИДАЦИИ формы
+    }
+    // Конец ВАЛИДАЦИИ формы
 
-        // Подсчитываем количество элементов массива с ошибками. Если он не пустой, показываем ошибки вместе с формой
-        if (count($validErrors)) {
-            $pageContent = includeTemplate($templatePath . "form-project.php", [
-                "projects" => $projects,
-                "tasksAll" => $tasksAll,
-                "validErrors" => $validErrors
-            ]);
+    // Подсчитываем количество элементов массива с ошибками. Если он не пустой, показываем ошибки вместе с формой
+    if (count($validErrors)) {
+        $pageContent = includeTemplate($templatePath . "form-project.php", [
+            "projects" => $projects,
+            "tasksAll" => $tasksAll,
+            "validErrors" => $validErrors
+        ]);
 
-            $layoutContent = includeTemplate($templatePath . "layout.php", [
-                "pageContent" => $pageContent,
-                "user" => $user,
-                "title" => "Дела в порядке | Добавление проекта"
-            ]);
-
-            print($layoutContent);
-            exit();
+        $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
+        dumpAndDie($layoutContent);
+    } else {
+        // Добавление нового проекта
+        $project = dbInsertProject($link, $userId, $project);
+        if ($project["success"] === 0) {
+            $pageContent = showTemplateWithError($templatePath,  $project["errorCaption"], $project["errorMessage"]);
+            $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
+            dumpAndDie($layoutContent);
         } else {
-            // SQL-запрос на добавление нового проекта
-            $sql = "INSERT INTO projects (user_id, name) VALUES ($userId, ?)";
-            $projectNewResult = dbInsertData($link, $sql, $project);
-
-            if (!$projectNewResult) {
-                $mysqlErrorMessage = mysqli_error($link);
-            } else {
-                header("Location: index.php");
-                exit();
-            }
+            header("Location: index.php");
+            exit();
         }
     }
 }
 
-$pageContent = showMysqlError($templatePath, $mysqlErrorMessage);
+$pageContent = showTemplateWithError($templatePath, $errorCaption, $errorMessage);
 
-if (!$mysqlErrorMessage) {
+if (!$errorMessage) {
     $pageContent = includeTemplate($templatePath . "form-project.php", [
         "projects" => $projects,
         "tasksAll" => $tasksAll
     ]);
 }
 
-$layoutContent = includeTemplate($templatePath . "layout.php", [
-    "pageContent" => $pageContent,
-    "user" => $user,
-    "title" => "Дела в порядке | Добавление проекта"
-]);
-
+$layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
 print($layoutContent);

@@ -5,7 +5,7 @@ $templatePath = "templates/";
 // HTML-код основного содержимого страницы
 $pageContent = "";
 
-// title для страницы
+// Название страницы
 $title = "";
 
 // Массив списка проектов у текущего пользователя
@@ -24,7 +24,8 @@ $searchTasks = [];
 $searchTasksMessage = "";
 
 // Текст последней ошибки при подключении к MySQL или при выполнении SQL запроса
-$mysqlErrorMessage = "";
+$errorCaption = "Ошибка";
+$errorMessage = "";
 
 // Массив ошибок при выполнении валидации формы
 $validErrors = [];
@@ -39,7 +40,7 @@ $tabs = "";
 $url = "";
 $urlLink = "";
 $showCompleteTasks = 1;
-$showCompleteTasksUrlPart = "";
+$showCompleteTasksUrl = "";
 
 // Данные пользователя и список задач для e-mail рассылки
 $dataUser = [];

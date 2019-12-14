@@ -5,11 +5,11 @@
         <ul class="main-navigation__list">
             <?php foreach ($projects as $item): ?>
 
-                <?php $className = isset($item["id"]) && isset($_GET["id"]) && $item["id"] === intval($_GET["id"]) ?
+                <?php $className = isset($item["id"]) && isset($_GET["project_id"]) && $item["id"] === intval($_GET["project_id"]) ?
                     "main-navigation__list-item--active" : ""; ?>
                 <li class="main-navigation__list-item <?= $className; ?>">
 
-                    <a class="main-navigation__list-item-link" href="/?id=<?= $item["id"]; ?>">
+                    <a class="main-navigation__list-item-link" href="/?project_id=<?= $item["id"]; ?>">
                         <?php if (isset($item["name"])): ?>
                             <?= htmlspecialchars($item["name"]); ?>
                         <?php endif; ?>
@@ -43,7 +43,7 @@
                 <li class="search-result__item">
 
                     <?php if (isset($item["project_id"])): ?>
-                        <a class="search-result__link" href="/?id=<?= $item["project_id"]; ?>">
+                        <a class="search-result__link" href="/?project_id=<?= $item["project_id"]; ?>">
                     <?php endif; ?>
                         <?php if (isset($item["title"])): ?>
                             <?= htmlspecialchars($item["title"]); ?>
@@ -102,7 +102,7 @@
                 <td class="task__select">
                     <label class="checkbox task__checkbox">
                     <?php if (isset($item["id"])): ?>
-                        <a href="/?task_id=<?= $item["id"]; ?><?= $tabs; ?><?= $showCompleteTasksUrlPart; ?>">
+                        <a href="/?task_id=<?= $item["id"]; ?><?= $tabs; ?><?= $showCompleteTasksUrl; ?>">
                     <?php endif; ?>
                             <input class="checkbox__input visually-hidden" type="checkbox"
                                 <?php if (isset($item["status"]) && $item["status"]): ?>

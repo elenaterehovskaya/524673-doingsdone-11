@@ -775,10 +775,10 @@ a:focus {
  */
 .user-menu__photo {
   display: inline-block;
-  vertical-align: middle;
   width: 40px;
   height: 40px;
   margin-right: 10px;
+  vertical-align: middle;
   border-radius: 50%;
 }
 
@@ -786,7 +786,17 @@ a:focus {
 Добавлено для шаблона «Ошибки» — error.php
  */
 .content__main-heading--error {
-  background: transparent url("../img/icon-error.png") no-repeat left 100px top 50%;
+  font-size: 22px;
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.content__main-heading--error span {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-left: 8px;
+  vertical-align: middle;
+  background: transparent url("../img/icon-error.png") no-repeat 0 50%;
 }
 
 /**

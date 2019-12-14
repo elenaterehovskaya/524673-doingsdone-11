@@ -23,44 +23,6 @@ function includeTemplate(string $name, array $data = [])
 }
 
 /**
- * Подсчитывает количество задач внутри каждого проекта
- * @param array $tasks Двумерный массив с данными для задач проекта
- * @param array $item Двумерный массив с названиями проектов
- * @return int $count Количество задач внутри проекта
- */
-function getCountTasksProject(array $tasks, array $item)
-{
-    $count = 0;
-
-    foreach ($tasks as $task) {
-        if (isset($task["project"]) && isset($item["name"]) && $task["project"] == $item["name"]) {
-            $count++;
-        }
-    }
-    return $count;
-}
-
-/**
- * Рассчитывает оставшееся время (в часах) до даты окончания выполнения задачи
- * с помощью метки времени unixtime
- * @param array $tasks Двумерный массив с данными для задач проекта
- * @return array Итоговый двумерный массив
- */
-function addHoursUntilEndTask(array $tasks)
-{
-    foreach ($tasks as $task_key => $task) {
-        if (isset($task["deadline"])) {
-            $tsEnd = strtotime($task["deadline"]);
-            $tsNow = time();
-            $tsDiff = $tsEnd - $tsNow;
-            $hoursUntilEnd = floor($tsDiff / 3600);
-            $tasks[$task_key]["hours_until_end"] = $hoursUntilEnd;
-        }
-    }
-    return $tasks;
-}
-
-/**
  * Создает подготовленное выражение на основе готового SQL запроса и переданных данных
  * @param $link mysqli Ресурс соединения
  * @param $sql string SQL запрос с плейсхолдерами вместо значений
@@ -109,41 +71,530 @@ function dbGetPrepareStmt($link, $sql, array $data = [])
             die($errorMsg);
         }
     }
+
     return $stmt;
 }
 
 /**
- * Получает данные из MySQL с помощью подготовленного выражения
- * @param $link mysqli Ресурс соединения
- * @param $sql string SQL запрос с плейсхолдерами вместо значений
- * @param array $data Данные для вставки на место плейсхолдеров
- * @return mixed $result Объект результата
+ * Выполняет подключение к MySQL
+ * @param array $mysqlConfig Двумерный массив с параметрами для подключения к БД
+ * @return array $result Двумерный массив с информацией по ресурсу соединения
  */
-function dbSelectData($link, $sql, array $data = [])
+function mysqlConnect(array $mysqlConfig): array
 {
-    // Формируем подготовленное выражение на основе SQL-запроса, ресурс соединения и массива со значениями
-    $stmt = dbGetPrepareStmt($link, $sql, $data);
-    // Выполняем полученное выражение
-    mysqli_stmt_execute($stmt);
-    // Получаем объект результата
-    $result = mysqli_stmt_get_result($stmt);
+    try {
+        // Установка перехвата ошибок: MYSQLI_REPORT_ERROR — Заносит в протокол ошибки вызовов функций mysqli
+        // MYSQLI_REPORT_STRICT — Вместо сообщений об ошибках выбрасывает исключение mysqli_sql_exception
+        mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+        $link = mysqli_init();
+        // Устанавливает преобразование целочисленных значений и  чисел с плавающей запятой из столбцов таблицы в PHP числа
+        mysqli_options($link, MYSQLI_OPT_INT_AND_FLOAT_NATIVE, 1);
+        mysqli_real_connect($link, $mysqlConfig["host"], $mysqlConfig["user"], $mysqlConfig["password"], $mysqlConfig["database"]);
+
+        // Кодировка при работе с MySQL
+        mysqli_set_charset($link, "utf8");
+        $result = ["success" => 1,
+                   "message" => "Успешное подключение к MySQL! ",
+                   "link" => $link];
+    } catch (Exception $ex) {
+        $result = ["success" => 0,
+                   "errorCaption" => "Ошибка подключения к MySQL",
+                   "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])];
+    }
 
     return $result;
 }
 
 /**
- * Добавляет новую запись в MySQL
+ * SQL-запрос при регистрации пользователя для поиска в базе данных уже используемого e-mail
  * @param $link mysqli Ресурс соединения
- * @param $sql string SQL запрос с плейсхолдерами вместо значений
- * @param array $data Данные для вставки на место плейсхолдеров
- * @return bool $result
+ * @param string $email E-mail переданный при аутентификации
+ * @return array $result Число записей после выполнения запроса
  */
-function dbInsertData($link, $sql, array $data = [])
+function dbGetEmail($link, string $email): array
 {
-    // Формируем подготовленное выражение на основе SQL-запроса, ресурс соединения и массива со значениями
-    $stmt = dbGetPrepareStmt($link, $sql, $data);
-    // Выполняем полученное выражение
-    $result = mysqli_stmt_execute($stmt);
+    $sql = "SELECT id FROM users WHERE email = '$email'";
+    try {
+        $emailResult = mysqli_query($link, $sql);
+        $result = ["success" => 1,
+            "count" => mysqli_num_rows($emailResult)];
+    } catch (Exception $ex) {
+        $result = ["success" => 0,
+            "errorCaption" => "Ошибка при выполнении SQL запроса",
+            "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])];
+    }
+
+    return $result;
+}
+
+/**
+ * SQL-запрос на добавление нового пользователя в базу данных
+ * @param $link mysqli Ресурс соединения
+ * @param array $data Данные для вставки на место плейсхолдеров
+ * @return array $result Успешное добавление нового пользователя
+ */
+function dbInsertUser($link, array $data = []): array
+{
+    $sql = "INSERT INTO users (email, name, password) VALUES (?, ?, ?)";
+    try {
+        // Формируем подготовленное выражение на основе SQL-запроса, ресурс соединения и массива со значениями
+        $stmt = dbGetPrepareStmt($link, $sql, $data);
+        // Выполняем полученное выражение
+        $userResult = mysqli_stmt_execute($stmt);
+        $result = ["success" => 1];
+    } catch (Exception $ex) {
+        $result = ["success" => 0,
+            "errorCaption" => "Ошибка при выполнении SQL запроса",
+            "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])];
+    }
+
+    return $result;
+}
+
+/**
+ * SQL-запрос при аутентификации пользователя для поиска в базе данных пользователя с переданным e-mail
+ * @param $link mysqli Ресурс соединения
+ * @param string $email E-mail переданный при аутентификации
+ * @return array $result Двумерный массив с данными по найденному пользователю
+ */
+function dbGetUser($link, string $email): array
+{
+    $sql = "SELECT * FROM users WHERE email = '$email'";
+    try {
+        $userResult = mysqli_query($link, $sql);
+        $user = mysqli_fetch_array($userResult, MYSQLI_ASSOC);
+        $result = ["success" => 1,
+            "data" => $user];
+    } catch (Exception $ex) {
+        $result = ["success" => 0,
+            "errorCaption" => "Ошибка при выполнении SQL запроса",
+            "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])];
+    }
+
+    return $result;
+}
+
+/**
+ * SQL-запрос для получения списка проектов у текущего пользователя
+ * @param $link mysqli Ресурс соединения
+ * @param int $userId Id текущего пользователя
+ * @return array $result Двумерный массив с информацией по проектам у текущего пользователя
+ */
+function dbGetProjects($link, int $userId): array
+{
+    $sql = "SELECT id, name FROM projects WHERE user_id = " . $userId;
+    try {
+        $projectsResult = mysqli_query($link, $sql);
+        $projects = mysqli_fetch_all($projectsResult, MYSQLI_ASSOC);
+        $result = ["success" => 1,
+                   "data" => $projects,
+                   "count" => mysqli_num_rows($projectsResult)];
+    } catch (Exception $ex) {
+        $result = ["success" => 0,
+                   "errorCaption" => "Ошибка при выполнении SQL запроса",
+                   "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])];
+    }
+
+    return $result;
+}
+
+/**
+ * SQL-запрос на добавление нового проекта у текущего пользователя
+ * @param $link mysqli Ресурс соединения
+ * @param int $userId Id текущего пользователя
+ * @param array $data Данные для вставки на место плейсхолдеров
+ * @return array $result Успешное добавление нового проекта
+ */
+function dbInsertProject($link, int $userId, array $data = []): array
+{
+    $sql = "INSERT INTO projects (user_id, name) VALUES ($userId, ?)";
+    try {
+        // Формируем подготовленное выражение на основе SQL-запроса, ресурс соединения и массива со значениями
+        $stmt = dbGetPrepareStmt($link, $sql, $data);
+        // Выполняем полученное выражение
+        $projectResult = mysqli_stmt_execute($stmt);
+        $result = ["success" => 1];
+    } catch (Exception $ex) {
+        $result = ["success" => 0,
+                   "errorCaption" => "Ошибка при выполнении SQL запроса",
+                   "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])];
+    }
+
+    return $result;
+}
+
+/**
+ * SQL-запрос для получения списка всех задач у текущего пользователя
+ * @param $link mysqli Ресурс соединения
+ * @param int $userId Id текущего пользователя
+ * @return array $result Двумерный массив с информацией по задачам для текущего пользователя
+ */
+function dbGetTasks($link, int $userId): array
+{
+    $sql = <<<SQL
+    SELECT t.id, t.user_id, p.name AS project, t.title, t.file, t.deadline, t.status
+    FROM tasks t
+    LEFT JOIN projects p ON t.project_id = p.id
+    LEFT JOIN users u ON t.user_id = u.id
+    WHERE t.user_id = $userId ORDER BY t.id DESC
+SQL;
+    try {
+        $tasksResult = mysqli_query($link, $sql);
+        $tasks = mysqli_fetch_all($tasksResult, MYSQLI_ASSOC);
+        $result = ["success" => 1,
+                   "data" => $tasks,
+                   "count" => mysqli_num_rows($tasksResult)];
+    } catch (Exception $ex) {
+        $result = ["success" => 0,
+                   "errorCaption" => "Ошибка при выполнении SQL запроса",
+                   "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])];
+    }
+
+    return $result;
+}
+
+/**
+ * SQL-запрос на добавление новой задачи у текущего пользователя
+ * @param $link mysqli Ресурс соединения
+ * @param int $userId Id текущего пользователя
+ * @param array $data Данные для вставки на место плейсхолдеров
+ * @return array $result Успешное добавление новой задачи
+ */
+function dbInsertTask($link, int $userId, array $data = []): array
+{
+    $sql = "INSERT INTO tasks (user_id, title, project_id, deadline, file) VALUES ($userId, ?, ?, ?, ?)";
+    try {
+        // Формируем подготовленное выражение на основе SQL-запроса, ресурс соединения и массива со значениями
+        $stmt = dbGetPrepareStmt($link, $sql, $data);
+        // Выполняем полученное выражение
+        $taskResult = mysqli_stmt_execute($stmt);
+        $result = ["success" => 1];
+    } catch (Exception $ex) {
+        $result = ["success" => 0,
+                   "errorCaption" => "Ошибка при выполнении SQL запроса",
+                   "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])];
+    }
+
+    return $result;
+}
+
+/**
+ * SQL-запрос для получения списка всех задач у текущего пользователя для каждого проекта
+ * @param $link mysqli Ресурс соединения
+ * @param int $projectId Id выбранного проекта текущего пользователя
+ * @param int $userId Id текущего пользователя
+ * @return array $result Двумерный массив с информацией по задачам для каждого проекта для текущего пользователя
+ */
+function dbGetTasksProject($link, int $projectId, int $userId): array
+{
+    $sql = <<<SQL
+    SELECT t.id, t.user_id, p.name AS project, t.title, t.file, t.deadline, t.status
+    FROM tasks t
+    LEFT JOIN projects p ON t.project_id = p.id
+    LEFT JOIN users u ON t.user_id = u.id
+    WHERE t.user_id = $userId and p.id = $projectId ORDER BY t.id DESC;
+SQL;
+    try {
+        $tasksResult = mysqli_query($link, $sql);
+        $tasks = mysqli_fetch_all($tasksResult, MYSQLI_ASSOC);
+        $result = ["success" => 1,
+                   "data" => $tasks,
+                   "count" => mysqli_num_rows($tasksResult)];
+    } catch (Exception $ex) {
+        $result = ["success" => 0,
+                   "errorCaption" => "Ошибка при выполнении SQL запроса",
+                   "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])];
+    }
+
+    return $result;
+}
+
+/**
+ * SQL-запрос для получения списка задач, найденных по поисковому запросу с использование FULLTEXT поиска MySQL
+ * @param $link mysqli Ресурс соединения
+ * @param int $userId Id текущего пользователя
+ * @param array $data Массив данных поискового запроса с использование FULLTEXT поиска MySQL
+ * @return array $result Двумерный массив с информацией по найденным задачам для текущего пользователя
+ */
+function dbGetSearchTasks($link, int $userId, array $data = []): array
+{
+    $sql = <<<SQL
+    SELECT t.id, t.user_id, p.id AS project_id, p.name AS project, t.title
+    FROM tasks t
+    LEFT JOIN projects p ON t.project_id = p.id
+    LEFT JOIN users u ON t.user_id = u.id
+    WHERE t.user_id = $userId and MATCH(title) AGAINST(?) ORDER BY t.id DESC
+SQL;
+    try {
+        $stmt = dbGetPrepareStmt($link, $sql, $data);
+        mysqli_stmt_execute($stmt);
+        $searchTasksResult = mysqli_stmt_get_result($stmt);
+        $searchTasks = mysqli_fetch_all($searchTasksResult, MYSQLI_ASSOC);
+        $result = ["success" => 1,
+                   "data" => $searchTasks,
+                   "count" => mysqli_num_rows($searchTasksResult)];
+    } catch (Exception $ex) {
+        $result = ["success" => 0,
+                   "errorCaption" => "Ошибка при выполнении SQL запроса",
+                   "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])];
+    }
+
+    return $result;
+}
+
+/**
+ * SQL-запрос для получения данных для блока сортировки задач у текущего пользователя
+ * @param $link mysqli Ресурс соединения
+ * @param int $userId Id текущего пользователя
+ * @param array $filter Двумерный массив с фильтрами (задачи на сегодня, на завтра, просроченные)
+ * @return array $result Двумерный массив с задачами, полученными в результате применения фильтров
+ */
+function dbGetFilterTasks($link, int $userId, array $filter = []): array
+{
+    if ($filter["tab"] === "today") {
+        // SQL-запрос для получения списка задач «Повестка дня»
+        $sql = <<<SQL
+        SELECT t.id, t.user_id, p.name AS project, t.title, t.file, t.deadline, t.status
+        FROM tasks t
+        LEFT JOIN projects p ON t.project_id = p.id
+        LEFT JOIN users u ON t.user_id = u.id
+        WHERE DATE(t.deadline) = DATE(NOW()) and t.user_id = $userId ORDER BY t.id DESC
+SQL;
+    }
+
+    if ($filter["tab"] === "tomorrow") {
+        // SQL-запрос для получения списка задач на «Завтра»
+        $sql = <<<SQL
+        SELECT t.id, t.user_id, p.name AS project, t.title, t.file, t.deadline, t.status
+        FROM tasks t
+        LEFT JOIN projects p ON t.project_id = p.id
+        LEFT JOIN users u ON t.user_id = u.id
+        WHERE DATE (t.deadline) = DATE(DATE_ADD(NOW(), INTERVAL 24 HOUR)) and t.user_id = $userId ORDER BY t.id DESC
+SQL;
+    }
+
+    if ($filter["tab"] === "past") {
+        // SQL-запрос для получения списка «Просроченные»
+        $sql = <<<SQL
+        SELECT t.id, t.user_id, p.name AS project, t.title, t.file, t.deadline, t.status
+        FROM tasks t
+        LEFT JOIN projects p ON t.project_id = p.id
+        LEFT JOIN users u ON t.user_id = u.id
+        WHERE DATE(t.deadline) < DATE(NOW()) and t.user_id = $userId ORDER BY t.id DESC
+SQL;
+    }
+
+    try {
+        $filterResult = mysqli_query($link, $sql);
+        $filterTasks = mysqli_fetch_all($filterResult, MYSQLI_ASSOC);
+        $result = ["success" => 1,
+                   "data" => $filterTasks];
+    } catch (Exception $ex) {
+        $result = ["success" => 0,
+                   "errorCaption" => "Ошибка при выполнении SQL запроса",
+                   "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])];
+    }
+
+    return $result;
+}
+
+/**
+ * SQL запрос для получения статуса выбранной задачи у текущего пользователя
+ * @param $link mysqli Ресурс соединения
+ * @param int $taskId Id выбранной задачи текущего пользователя
+ * @param int $userId Id текущего пользователя
+ * @return array $result Массив с информацией по статусу выбранной задачи
+ */
+function dbGetStatusTask($link, int $taskId, int $userId): array
+{
+    $sql = "SELECT id, status FROM tasks WHERE id = $taskId and user_id = " . $userId;
+
+    try {
+        $statusTaskResult = mysqli_query($link, $sql);
+        $statusTask = mysqli_fetch_assoc($statusTaskResult);
+        $result = ["success" => 1,
+                   "data" => $statusTask];
+    } catch (Exception $ex) {
+        $result = ["success" => 0,
+                   "errorCaption" => "Ошибка при выполнении SQL запроса",
+                   "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])];
+    }
+
+    return $result;
+}
+
+/**
+ * SQL запрос на cмену статуса выполнения задачи у текущего пользователя
+ * @param $link mysqli Ресурс соединения
+ * @param int $status Текущий статус выбранной задачи у текущего пользователя
+ * @param int $taskId Id выбранной задачи текущего пользователя
+ * @param int $userId Id текущего пользователя
+ * @return array $result Успешная смена статуса задачи
+
+ */
+function dbChangeStatusTask($link, int $status, int $taskId, int $userId): array
+{
+    $sql = "UPDATE tasks SET status = $status WHERE id = $taskId and user_id = " . $userId;
+
+    try {
+        $changeStatusResult = mysqli_query($link, $sql);
+        $result = ["success" => 1];
+    } catch (Exception $ex) {
+        $result = ["success" => 0,
+                   "errorCaption" => "Ошибка при выполнении SQL запроса",
+                   "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])];
+    }
+
+    return $result;
+}
+
+/**
+ * SQL запрос на получение всех ID пользователей, у которых есть невыполненные задачи, срок которых равен текущему дню
+ * @param $link mysqli Ресурс соединения
+ * @return array $result Двумерный массив с уникальными значениями ID пользователей
+ */
+function dbGetUsersIds($link): array
+{
+    $sql = "SELECT user_id FROM tasks WHERE DATE(deadline) = DATE(NOW()) and status = 0 GROUP BY user_id";
+    try {
+        $usersIdsResult = mysqli_query($link, $sql);
+        $usersIds = mysqli_fetch_all($usersIdsResult, MYSQLI_ASSOC);
+        $result = ["success" => 1,
+                   "data" => $usersIds,
+                   "count" => mysqli_num_rows($usersIdsResult)];
+    } catch (Exception $ex) {
+        $result = ["success" => 0,
+                   "errorCaption" => "Ошибка при выполнении SQL запроса",
+                   "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])];
+    }
+
+    return $result;
+}
+
+/**
+ * SQL запрос на получение данных по невыполненным задачам для каждого найденного пользователя
+ * @param $link mysqli Ресурс соединения
+ * @param int $value Значением ID найденного пользователя
+ * @return array $result Двумерный массив с данными по невыполненным задачам для найденного пользователя
+ */
+function dbGetTasksUser($link, int $value): array
+{
+    $sql = "SELECT title, deadline FROM tasks WHERE DATE(deadline) = DATE(NOW()) and status = 0 and user_id = $value";
+    try {
+        $tasksUserResult = mysqli_query($link, $sql);
+        $tasksUser = mysqli_fetch_all($tasksUserResult, MYSQLI_ASSOC);
+        $result = ["success" => 1,
+            "data" => $tasksUser];
+    } catch (Exception $ex) {
+        $result = ["success" => 0,
+            "errorCaption" => "Ошибка при выполнении SQL запроса",
+            "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])];
+    }
+
+    return $result;
+}
+
+/**
+ * SQL запрос на получение данных о каждом найденном пользователе для отправки e-mail рассылки
+ * @param $link mysqli Ресурс соединения
+ * @param int $value Значением ID найденного пользователя
+ * @return array $result Двумерный массив с данными о каждом найденном пользователе для отправки e-mail рассылки
+ */
+function dbGetDataUser($link, int $value): array
+{
+    $sql = "SELECT email, name FROM users WHERE id = $value";
+    try {
+        $dataUserResult = mysqli_query($link, $sql);
+        $dataUser = mysqli_fetch_assoc($dataUserResult);
+        $result = ["success" => 1,
+                   "data" => $dataUser];
+    } catch (Exception $ex) {
+        $result = ["success" => 0,
+                   "errorCaption" => "Ошибка при выполнении SQL запроса",
+                   "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])];
+    }
+
+    return $result;
+}
+
+/**
+ * Показывает шаблон ошибки с текстом последней ошибки
+ * @param string $templatePath Путь к папке с шаблонами
+ * @param string $errorCaption Заголовок ошибки
+ * @param string $errorMessage Текст ошибки
+ * @return string HTML контент
+ */
+function showTemplateWithError(string $templatePath, string $errorCaption, string $errorMessage)
+{
+    return includeTemplate($templatePath . "error.php", [
+        "errorCaption" => $errorCaption,
+        "errorMessage" => $errorMessage
+    ]);
+}
+
+/**
+ * Показывает шаблон лейаута для зарегистрированного пользователя
+ * @param string $templatePath Путь к папке с шаблонами
+ * @param string $pageContent Содержание контентной части
+ * @param string $title Название страницы
+ * @param array $user Данные текущего пользователя
+ * @return string HTML контент
+ */
+function showTemplateLayout(string $templatePath, string $pageContent, string $title, array $user = [])
+{
+    return $layoutContent = includeTemplate($templatePath . "layout.php", [
+        "pageContent" => $pageContent,
+        "title" => $title,
+        "user" => $user
+    ]);
+}
+
+/**
+ * Показывает шаблон лейаута для НЕзарегистрированного пользователя
+ * @param string $templatePath Путь к папке с шаблонами
+ * @param string $pageContent Содержание контентной части
+ * @param array $config Массив с параметрами сайта
+ * @param string $title Название страницы
+ * @return string HTML контент
+ */
+function showTemplateLayoutGuest(string $templatePath, string $pageContent, array $config, string $title)
+{
+    return $layoutContent = includeTemplate($templatePath . "layout.php", [
+        "pageContent" => $pageContent,
+        "config" => $config,
+        "title"  => $title,
+        "user" => []
+    ]);
+}
+
+
+/**
+ * Отправляет подготовленное электронное сообщение (e-mail рассылку)
+ * @param array $mailConfig Ассоциативный массив с данными для доступа к SMTP-серверу и параметрами сообщения
+ * @param array $recipient Ассоциативный массив с данными получателя в виде [e-mail => имя]
+ * @param string $messageContent Сообщение с HTML форматированием
+ * @return string $result E-mail рассылка
+ */
+function sendMail(array $mailConfig, array $recipient, string $messageContent)
+{
+    // Конфигурация транспорта, отвечает за способ отправки. Содержит параметры доступа к SMTP-серверу
+    $transport = (new Swift_SmtpTransport($mailConfig["domain"], $mailConfig["port"]))
+        ->setUsername($mailConfig["userName"])
+        ->setPassword($mailConfig["password"])
+        ->setEncryption($mailConfig["encryption"]);
+
+    // Объект библиотеки SwiftMailer, отвечает за отправку сообщений. Передаём туда созданный объект с SMTP-сервером
+    $mailer = new Swift_Mailer($transport);
+
+    // Формирование сообщения. Содержит параметры сообщения: текст, тему, отправителя и получателя
+    $message = (new Swift_Message($mailConfig["subject"]))
+        ->setFrom([$mailConfig["userName"] => $mailConfig["userCaption"]])
+        ->setBcc($recipient)
+        ->setBody($messageContent, "text/html");
+
+    // Отправка сообщения
+    $result = $mailer->send($message);
 
     return $result;
 }
@@ -180,6 +631,7 @@ function validateEmail(string $value)
     if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
         return "E-mail введён некорректно";
     }
+
     return null;
 }
 
@@ -194,6 +646,7 @@ function validateValue($value, array $valuesList)
     if (!in_array($value, $valuesList)) {
         return "Выберите проект из раскрывающегося списка";
     }
+
     return null;
 }
 
@@ -212,6 +665,7 @@ function validateLength(string $value, int $min, int $max)
             return "Поле должно содержать от $min до $max символов";
         }
     }
+
     return null;
 }
 
@@ -235,74 +689,43 @@ function isDateValid(string $date): bool
 }
 
 /**
- * Показывает шаблон ошибки с текстом последней ошибки
- * @param string $templatePath Путь к папке с шаблонами
- * @param string $mysqlErrorMessage Ошибка подключения к MySQL или ошибка выполнения SQL запроса
- * @return string HTML контент
+ * Подсчитывает количество задач внутри каждого проекта
+ * @param array $tasks Двумерный массив с данными для задач проекта
+ * @param array $item Двумерный массив с названиями проектов
+ * @return int $count Количество задач внутри проекта
  */
-function showMysqlError(string $templatePath, string $mysqlErrorMessage)
+function getCountTasksProject(array $tasks, array $item)
 {
-    return includeTemplate($templatePath . "error.php", [
-        "mysqlErrorMessage" => $mysqlErrorMessage
-    ]);
+    $count = 0;
+
+    foreach ($tasks as $task) {
+        if (isset($task["project"]) && isset($item["name"]) && $task["project"] == $item["name"]) {
+            $count++;
+        }
+    }
+
+    return $count;
 }
 
 /**
- * Показывает шаблон формы регистрации + ошибки валидации
- * @param string $templatePath Путь к папке с шаблонами
- * @param array $validErrors Двумерный массив с ошибками валидации
- * @return string HTML контент
+ * Рассчитывает оставшееся время (в часах) до даты окончания выполнения задачи
+ * с помощью метки времени unixtime
+ * @param array $tasks Двумерный массив с данными для задач проекта
+ * @return array Итоговый двумерный массив
  */
-function showValidErrorRegister(string $templatePath, array $validErrors = [])
+function addHoursUntilEndTask(array $tasks)
 {
-    return includeTemplate($templatePath . "form-register.php", [
-        "validErrors" => $validErrors
-    ]);
-}
+    foreach ($tasks as $task_key => $task) {
+        if (isset($task["deadline"])) {
+            $tsEnd = strtotime($task["deadline"]);
+            $tsNow = time();
+            $tsDiff = $tsEnd - $tsNow;
+            $hoursUntilEnd = floor($tsDiff / 3600);
+            $tasks[$task_key]["hours_until_end"] = $hoursUntilEnd;
+        }
+    }
 
-/**
- * Показывает шаблон формы аутентификации + ошибки валидации
- * @param string $templatePath Путь к папке с шаблонами
- * @param array $validErrors Двумерный массив с ошибками валидации
- * @param string $validErrorMessage Итоговое сообщение об ошибки валидации
- * @return string HTML контент
- */
-function showValidErrorAuth(string $templatePath, string $validErrorMessage, array $validErrors = [])
-{
-    return includeTemplate($templatePath . "form-auth.php", [
-        "validErrorMessage" => $validErrorMessage,
-        "validErrors" => $validErrors
-    ]);
-}
-
-/**
- * Отправляет подготовленное электронное сообщение (e-mail рассылку)
- * @param array $mailConfig Ассоциативный массив с данными для доступа к SMTP-серверу и параметрами сообщения
- * @param array $recipient Ассоциативный массив с данными получателя в виде [e-mail => имя]
- * @param string $messageContent Сообщение с HTML форматированием
- * @return string $result E-mail рассылка
- */
-function sendMail(array $mailConfig, array $recipient, string $messageContent)
-{
-    // Конфигурация транспорта: отвечает за способ отправки, содержит параметры доступа к SMTP-серверу
-    $transport = (new Swift_SmtpTransport($mailConfig["domain"], $mailConfig["port"]))
-        ->setUsername($mailConfig["userName"])
-        ->setPassword($mailConfig["password"])
-        ->setEncryption($mailConfig["encryption"]);
-
-    // Объект библиотеки SwiftMailer, отвечает за отправку сообщений. Передаём туда созданный объект с SMTP-сервером
-    $mailer = new Swift_Mailer($transport);
-
-    // Формирование сообщения
-    $message = (new Swift_Message($mailConfig["subject"]))
-        ->setFrom([$mailConfig["userName"] => $mailConfig["userCaption"]])
-        ->setBcc([$recipient])
-        ->setBody($messageContent, "text/html");
-
-    // Отправка сообщения
-    $result = $mailer->send($message);
-
-    return $result;
+    return $tasks;
 }
 
 /**
@@ -314,4 +737,13 @@ function debug($value)
     print("<pre>");
     print_r($value);
     print("</pre>");
+}
+
+/**
+ * Выводит значение и завершает работу
+ * @param mixed $value
+ */
+function dumpAndDie($value)
+{
+    die($value);
 }
