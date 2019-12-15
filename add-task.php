@@ -1,5 +1,5 @@
 <?php
-require_once("init.php");
+require_once("config.php");
 
 if (!isset($_SESSION["user"])) {
     header("location: /guest.php");
@@ -10,22 +10,21 @@ $title = "Дела в порядке | Добавление задачи";
 $user = $_SESSION["user"];
 $userId = intval($_SESSION["user"]["id"]);
 
+// Если сайт находится в неактивном состоянии, выходим на страницу с сообщением о техническом обслуживании
+ifSiteDisabled($config, $templatePath, $title);
+
 // Подключение к MySQL
 $link = mysqlConnect($mysqlConfig);
 
 // Проверяем наличие ошибок подключения к MySQL и выводим их в шаблоне
-if ($link["success"] === 0) {
-    $pageContent = showTemplateWithError($templatePath, $link["errorCaption"], $link["errorMessage"]);
-    $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
-    dumpAndDie($layoutContent);
-}
+ifMysqlConnectError($link, $config, $title, $templatePath);
 
 $link = $link["link"];
 
 // Список проектов у текущего пользователя
 $projects = dbGetProjects($link, $userId);
 if ($projects["success"] === 0) {
-    $pageContent = showTemplateWithError($templatePath,  $projects["errorCaption"], $projects["errorMessage"]);
+    $pageContent = showTemplateWithError($templatePath, $projects["errorCaption"], $projects["errorMessage"]);
     $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
     dumpAndDie($layoutContent);
 }
@@ -57,8 +56,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     $validRules = [
-        "title" => function ($value) {
-            return validateLength($value, 5, 255);
+        "title" => function ($value) use ($config) {
+            return validateLength($value,
+                $config["addLengthRules"]["title"]["min"],
+                $config["addLengthRules"]["title"]["max"]
+            );
         },
         "project_id" => function ($value) use ($projectsIds) {
             return validateValue($value, $projectsIds);
@@ -87,6 +89,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $validErrors[$key] = "Это поле должно быть заполнено";
         }
     }
+
     // Массив отфильтровываем, чтобы удалить пустые значения и оставить только сообщения об ошибках
     $validErrors = array_filter($validErrors);
 
@@ -129,7 +132,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $validErrors["file"] = "Максимальный размер файла: 300Кб";
             } else {
                 // Сохраняем его в папке «uploads» и формируем ссылку на скачивание
-                $filePath = __DIR__ . "/uploads/";
+                $filePath = $config["filePath"];
                 $fileUrl = "/uploads/" . $fileName;
 
                 // Перемещает загруженный файл по новому адресу
@@ -152,18 +155,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
         dumpAndDie($layoutContent);
-    } else {
-        // Добавление новой задачи
-        $task = dbInsertTask($link, $userId, $task);
-        if ($task["success"] === 0) {
-            $pageContent = showTemplateWithError($templatePath, $task["errorCaption"], $task["errorMessage"]);
-            $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
-            dumpAndDie($layoutContent);
-        } else {
-            header("Location: index.php");
-            exit();
-        }
     }
+
+    // Добавление новой задачи
+    $task = dbInsertTask($link, $userId, $task);
+    if ($task["success"] === 0) {
+        $pageContent = showTemplateWithError($templatePath, $task["errorCaption"], $task["errorMessage"]);
+        $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
+        dumpAndDie($layoutContent);
+    }
+
+    header("Location: index.php");
+    exit();
 }
 
 $pageContent = showTemplateWithError($templatePath, $errorCaption, $errorMessage);

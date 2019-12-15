@@ -1,17 +1,16 @@
 <?php
-require_once("init.php");
+require_once("config.php");
 
 $title = "Дела в порядке | Регистрация аккаунта";
+
+// Если сайт находится в неактивном состоянии, выходим на страницу с сообщением о техническом обслуживании
+ifSiteDisabled($config, $templatePath, $title);
 
 // Подключение к MySQL
 $link = mysqlConnect($mysqlConfig);
 
 // Проверяем наличие ошибок подключения к MySQL и выводим их в шаблоне
-if ($link["success"] === 0) {
-    $pageContent = showTemplateWithError($templatePath, $link["errorCaption"], $link["errorMessage"]);
-    $layoutContent = showTemplateLayoutGuest($templatePath, $pageContent, $config, $title);
-    dumpAndDie($layoutContent);
-}
+ifMysqlConnectError($link, $config, $title, $templatePath);
 
 $link = $link["link"];
 
@@ -26,11 +25,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         "email" => function ($value) {
             return validateEmail($value);
         },
-        "password" => function($value) {
-            return validateLength($value, 8, 32);
+        "password" => function ($value) use ($config) {
+            return validateLength($value,
+                $config["registerLengthRules"]["password"]["min"],
+                $config["registerLengthRules"]["password"]["max"]
+            );
         },
-        "name" => function ($value) {
-            return validateLength($value, 4, 20);
+        "name" => function ($value) use ($config) {
+            return validateLength($value,
+                $config["registerLengthRules"]["name"]["min"],
+                $config["registerLengthRules"]["name"]["max"]
+            );
         }
     ];
 
@@ -60,6 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $validErrors["email"] = "Указанный e-mail уже используется другим пользователем";
         }
     }
+
     // Массив отфильтровываем, чтобы удалить пустые значения и оставить только сообщения об ошибках
     $validErrors = array_filter($validErrors);
 
@@ -72,10 +78,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $pageContent = showTemplateWithError($templatePath, $user["errorCaption"], $user["errorMessage"]);
             $layoutContent = showTemplateLayoutGuest($templatePath, $pageContent, $config, $title);
             dumpAndDie($layoutContent);
-        } else {
-            header("Location: index.php");
-            exit();
         }
+
+        header("Location: index.php");
+        exit();
     }
 }
 

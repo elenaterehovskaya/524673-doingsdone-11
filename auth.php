@@ -1,17 +1,16 @@
 <?php
-require_once("init.php");
+require_once("config.php");
 
 $title = "Дела в порядке | Авторизация на сайте";
+
+// Если сайт находится в неактивном состоянии, выходим на страницу с сообщением о техническом обслуживании
+ifSiteDisabled($config, $templatePath, $title);
 
 // Подключение к MySQL
 $link = mysqlConnect($mysqlConfig);
 
 // Проверяем наличие ошибок подключения к MySQL и выводим их в шаблоне
-if ($link["success"] === 0) {
-    $pageContent = showTemplateWithError($templatePath, $link["errorCaption"], $link["errorMessage"]);
-    $layoutContent = showTemplateLayoutGuest($templatePath, $pageContent, $config, $title);
-    dumpAndDie($layoutContent);
-}
+ifMysqlConnectError($link, $config, $title, $templatePath);
 
 $link = $link["link"];
 
@@ -35,29 +34,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if (count($validErrors)) {
         $validErrorMessage = "Пожалуйста, исправьте ошибки в форме";
-    } else if (isset($userGuest["email"])) {
-        $email = mysqli_real_escape_string($link, $userGuest["email"]);
+    } else {
+        if (isset($userGuest["email"])) {
+            $email = mysqli_real_escape_string($link, $userGuest["email"]);
 
-        // Поиск в базе данных в таблице users пользователя с переданным e-mail
-        $user = dbGetUser($link, $email);
-        if ($user["success"] === 0) {
-            $pageContent = showTemplateWithError($templatePath, $user["errorCaption"], $user["errorMessage"]);
-            $layoutContent = showTemplateLayoutGuest($templatePath, $pageContent, $config, $title);
-            dumpAndDie($layoutContent);
-        }
+            // Поиск в базе данных в таблице users пользователя с переданным e-mail
+            $user = dbGetUser($link, $email);
+            if ($user["success"] === 0) {
+                $pageContent = showTemplateWithError($templatePath, $user["errorCaption"], $user["errorMessage"]);
+                $layoutContent = showTemplateLayoutGuest($templatePath, $pageContent, $config, $title);
+                dumpAndDie($layoutContent);
+            }
 
-        $user = $user["data"];
+            $user = $user["data"];
 
-        if (!$user) {
-            $validErrorMessage = "Вы ввели неверный email/пароль";
-        } else {
             // Проверяем, соответствует ли переданный пароль хешу
             if (password_verify($userGuest["password"], $user["password"])) {
                 $_SESSION["user"] = $user;
-
                 header("Location: index.php");
                 exit();
             }
+
+            $validErrorMessage = "Вы ввели неверный email/пароль";
         }
     }
 }

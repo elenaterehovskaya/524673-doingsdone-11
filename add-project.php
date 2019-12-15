@@ -1,5 +1,5 @@
 <?php
-require_once("init.php");
+require_once("config.php");
 
 if (!isset($_SESSION["user"])) {
     header("location: /guest.php");
@@ -10,22 +10,21 @@ $title = "Дела в порядке | Добавление проекта";
 $user = $_SESSION["user"];
 $userId = intval($_SESSION["user"]["id"]);
 
+// Если сайт находится в неактивном состоянии, выходим на страницу с сообщением о техническом обслуживании
+ifSiteDisabled($config, $templatePath, $title);
+
 // Подключение к MySQL
 $link = mysqlConnect($mysqlConfig);
 
 // Проверяем наличие ошибок подключения к MySQL и выводим их в шаблоне
-if ($link["success"] === 0) {
-    $pageContent = showTemplateWithError($templatePath, $link["errorCaption"], $link["errorMessage"]);
-    $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
-    dumpAndDie($layoutContent);
-}
+ifMysqlConnectError($link, $config, $title, $templatePath);
 
 $link = $link["link"];
 
 // Список проектов у текущего пользователя
 $projects = dbGetProjects($link, $userId);
 if ($projects["success"] === 0) {
-    $pageContent = showTemplateWithError($templatePath,  $projects["errorCaption"], $projects["errorMessage"]);
+    $pageContent = showTemplateWithError($templatePath, $projects["errorCaption"], $projects["errorMessage"]);
     $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
     dumpAndDie($layoutContent);
 }
@@ -53,7 +52,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $validErrors["name"] = "Это поле должно быть заполнено";
     }
 
-    $validateLength = validateLength($project["name"], 3, 15);
+    $validateLength = validateLength($project["name"],
+        $config["addLengthRules"]["project"]["min"],
+        $config["addLengthRules"]["project"]["max"]
+    );
+
     if ($validateLength !== null) {
         $validErrors["name"] = $validateLength;
     }
@@ -77,18 +80,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
         dumpAndDie($layoutContent);
-    } else {
-        // Добавление нового проекта
-        $project = dbInsertProject($link, $userId, $project);
-        if ($project["success"] === 0) {
-            $pageContent = showTemplateWithError($templatePath,  $project["errorCaption"], $project["errorMessage"]);
-            $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
-            dumpAndDie($layoutContent);
-        } else {
-            header("Location: index.php");
-            exit();
-        }
     }
+
+    // Добавление нового проекта
+    $project = dbInsertProject($link, $userId, $project);
+    if ($project["success"] === 0) {
+        $pageContent = showTemplateWithError($templatePath, $project["errorCaption"], $project["errorMessage"]);
+        $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
+        dumpAndDie($layoutContent);
+    }
+
+    header("Location: index.php");
+    exit();
 }
 
 $pageContent = showTemplateWithError($templatePath, $errorCaption, $errorMessage);
