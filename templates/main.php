@@ -120,7 +120,7 @@
 
                 <td class="task__file">
                     <?php if (isset($item["file"])): ?>
-                        <a class="download-link" href="<?= $item["file"]; ?>">Файл</a>
+                        <a class="download-link" href="<?= $item["file"]; ?>" target="_blank">Файл</a>
                     <?php endif; ?>
                 </td>
 
