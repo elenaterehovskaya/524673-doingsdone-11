@@ -1,6 +1,6 @@
 <?php
 require_once "vendor/autoload.php";
-require_once "init.php";
+require_once "config.php";
 
 // Подключение к MySQL
 $link = mysqlConnect($mysqlConfig);
@@ -14,18 +14,18 @@ if ($link["success"] === 0) {
 print($link["message"]);
 $link = $link["link"];
 
-// Список уникальных значений ID пользователей, у которых есть невыполненные задачи, срок которых равен текущему дню
+// Список ID пользователей, у которых есть невыполненные задачи, срок выполнения которых равен текущему дню
 $usersIds = dbGetUsersIds($link);
 if ($usersIds["success"] === 0) {
     print($usersIds["errorCaption"] . " | " . $usersIds["errorMessage"]);
     exit();
 }
 
-$usersIds = $usersIds["data"];
+if ($usersIds["count"] === 0) {
+    print("Нет задач для отправки рассылки!");
+}
 
-/*if ($usersIds["count"] === 0) {
-    print("Нет задач для отправки рассылки");
-}*/
+$usersIds = $usersIds["data"];
 
 foreach ($usersIds as $value) {
     $value = $value["user_id"];
