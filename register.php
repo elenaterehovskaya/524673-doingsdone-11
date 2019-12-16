@@ -85,13 +85,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-$pageContent = showTemplateWithError($templatePath, $errorCaption, $errorMessage);
-
-if (!$errorMessage) {
-    $pageContent = includeTemplate($templatePath . "form-register.php", [
-        "validErrors" => $validErrors
-    ]);
-}
+$pageContent = includeTemplate($templatePath . "form-register.php", [
+    "validErrors" => $validErrors
+]);
 
 $layoutContent = showTemplateLayoutGuest($templatePath, $pageContent, $config, $title);
 print($layoutContent);

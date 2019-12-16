@@ -75,14 +75,14 @@ if (isset($_GET["project_id"])) {
 
     if ($currentProjectId === false) {
         http_response_code(404);
-        $errorMessage = "Не найдено проекта с таким ID";
-        ifErrorMessage($templatePath, $errorCaption, $errorMessage, $title, $user);
+        $message = "Не найдено проекта с таким ID";
+        ifErrorResultSearch($templatePath, $messageCaption, $message, $title, $user);
     }
 
     if ($tasks["count"] == 0) {
         http_response_code(404);
-        $errorMessage = "Не найдено ни одной задачи для данного проекта";
-        ifErrorMessage($templatePath, $errorCaption, $errorMessage, $title, $user);
+        $message = "Не найдено ни одной задачи для данного проекта";
+        ifErrorResultSearch($templatePath, $messageCaption, $message, $title, $user);
     }
 
     $tasks = $tasks["data"];

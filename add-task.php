@@ -169,14 +169,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     exit();
 }
 
-$pageContent = showTemplateWithError($templatePath, $errorCaption, $errorMessage);
-
-if (!$errorMessage) {
-    $pageContent = includeTemplate($templatePath . "form-task.php", [
-        "projects" => $projects,
-        "tasksAll" => $tasksAll
-    ]);
-}
+$pageContent = includeTemplate($templatePath . "form-task.php", [
+    "projects" => $projects,
+    "tasksAll" => $tasksAll
+]);
 
 $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
 print($layoutContent);

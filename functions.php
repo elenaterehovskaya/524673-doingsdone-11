@@ -44,7 +44,6 @@ function mysqlConnect(array $mysqlConfig): array
         mysqli_set_charset($link, "utf8");
         $result = [
             "success" => 1,
-            "message" => "Подключение к MySQL выполнено успешно! ",
             "link" => $link
         ];
     } catch (Exception $ex) {
@@ -80,7 +79,7 @@ function ifSiteDisabled(array $config, string $templatePath, string $title)
 }
 
 /**
- * Показывает ошибку подключения к MySQL в шаблоне ошибок
+ * Показывает страницу с сообщением об ошибке подключения к MySQL
  * @param array $link mysqli Ассоциативный массив с информацией по ресурсу соединения
  * @param array $config Двумерный массив с параметрами сайта
  * @param string $title Название страницы сайта
@@ -96,9 +95,9 @@ function ifMysqlConnectError(array $link, array $config, string $title, string $
 }
 
 /**
- * Создает подготовленное выражение на основе готового SQL запроса и переданных данных
+ * Создает подготовленное выражение на основе готового SQL-запроса и переданных данных
  * @param $link mysqli Ресурс соединения
- * @param string $sql SQL запрос с плейсхолдерами вместо значений
+ * @param string $sql SQL-запрос с плейсхолдерами вместо значений
  * @param array $data Массив с данными для вставки на место плейсхолдеров
  * @return false|mysqli_stmt Подготовленное выражение
  */
@@ -166,7 +165,7 @@ function dbGetEmail($link, string $email): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL запроса",
+            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -192,7 +191,7 @@ function dbInsertUser($link, array $data = []): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL запроса",
+            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -219,7 +218,7 @@ function dbGetUser($link, string $email): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL запроса",
+            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -247,7 +246,7 @@ function dbGetProjects($link, int $userId): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL запроса",
+            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -274,7 +273,7 @@ function dbInsertProject($link, int $userId, array $data = []): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL запроса",
+            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -308,7 +307,7 @@ SQL;
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL запроса",
+            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -335,7 +334,7 @@ function dbInsertTask($link, int $userId, array $data = []): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL запроса",
+            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -370,7 +369,7 @@ SQL;
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL запроса",
+            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -407,7 +406,7 @@ SQL;
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL запроса",
+            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -466,7 +465,7 @@ SQL;
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL запроса",
+            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -475,7 +474,7 @@ SQL;
 }
 
 /**
- * SQL запрос для получения статуса выбранной задачи у текущего пользователя
+ * SQL-запрос для получения статуса выбранной задачи у текущего пользователя
  * @param $link mysqli Ресурс соединения
  * @param int $taskId Id выбранной задачи текущего пользователя
  * @param int $userId Id текущего пользователя
@@ -494,7 +493,7 @@ function dbGetStatusTask($link, int $taskId, int $userId): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL запроса",
+            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -503,7 +502,7 @@ function dbGetStatusTask($link, int $taskId, int $userId): array
 }
 
 /**
- * SQL запрос на cмену статуса выполнения задачи у текущего пользователя
+ * SQL-запрос на cмену статуса выполнения задачи у текущего пользователя
  * @param $link mysqli Ресурс соединения
  * @param int $status Статус выбранной задачи
  * @param int $taskId Id выбранной задачи текущего пользователя
@@ -519,7 +518,7 @@ function dbChangeStatusTask($link, int $status, int $taskId, int $userId): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL запроса",
+            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -528,7 +527,7 @@ function dbChangeStatusTask($link, int $status, int $taskId, int $userId): array
 }
 
 /**
- * SQL запрос на получение всех ID пользователей, у которых есть невыполненные задачи, срок которых равен текущему дню
+ * SQL-запрос на получение всех ID пользователей, у которых есть невыполненные задачи, срок которых равен текущему дню
  * @param $link mysqli Ресурс соединения
  * @return array $result Ассоциативный массив с информацией по SQL-запросу
  */
@@ -546,7 +545,7 @@ function dbGetUsersIds($link): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL запроса",
+            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -555,7 +554,7 @@ function dbGetUsersIds($link): array
 }
 
 /**
- * SQL запрос на получение данных по невыполненным задачам для каждого найденного пользователя
+ * SQL-запрос на получение данных по невыполненным задачам для каждого найденного пользователя
  * @param $link mysqli Ресурс соединения
  * @param int $value Значением ID найденного пользователя
  * @return array $result Ассоциативный массив с информацией по SQL-запросу
@@ -573,7 +572,7 @@ function dbGetTasksUser($link, int $value): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL запроса",
+            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -600,7 +599,7 @@ function dbGetDataUser($link, int $value): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL запроса",
+            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -609,7 +608,7 @@ function dbGetDataUser($link, int $value): array
 }
 
 /**
- * Показывает шаблон ошибки с текстом последней ошибки при выполнении SQL-запроса
+ * Показывает шаблон с информацией об ошибке выполнения SQL-запроса
  * @param string $templatePath Путь к папке с шаблонами
  * @param string $errorCaption Заголовок ошибки
  * @param string $errorMessage Текст ошибки
@@ -617,9 +616,24 @@ function dbGetDataUser($link, int $value): array
  */
 function showTemplateWithError(string $templatePath, string $errorCaption, string $errorMessage)
 {
-    return includeTemplate($templatePath . "error.php", [
-        "errorCaption" => $errorCaption,
-        "errorMessage" => $errorMessage
+    return includeTemplate($templatePath . "inform.php", [
+        "messageCaption" => $errorCaption,
+        "message" => $errorMessage
+    ]);
+}
+
+/**
+ * Показывает шаблон с информацией о результате выполненного действия (поиска в БД или отправки сообщения)
+ * @param string $templatePath Путь к папке с шаблонами
+ * @param string $messageCaption Заголовок сообщения
+ * @param string $message Текст сообщения
+ * @return string HTML контент
+ */
+function showTemplateWithMessage(string $templatePath, string $messageCaption, string $message)
+{
+    return includeTemplate($templatePath . "inform.php", [
+        "messageCaption" => $messageCaption,
+        "message" => $message
     ]);
 }
 
@@ -659,17 +673,16 @@ function showTemplateLayoutGuest(string $templatePath, string $pageContent, arra
 }
 
 /**
- * Показывает шаблон ошибки с сообщением об ошибке поиска заданных параметров в БД
+ * Показывает страницу с информацией о результате поиска в БД заданных параметров
  * @param string $templatePath Путь к папке с шаблонами
- * @param string $errorCaption Заголовок ошибки
- * @param string $errorMessage Текст ошибки
+ * @param string $messageCaption Заголовок сообщения
+ * @param string $message Текст сообщения
  * @param string $title Название страницы сайта
  * @param array $user Данные текущего пользователя
- * @return string HTML контент
  */
-function ifErrorMessage(string $templatePath, string $errorCaption, string $errorMessage, string $title, array $user)
+function ifErrorResultSearch(string $templatePath, string $messageCaption, string $message, string $title, array $user)
 {
-    $pageContent = showTemplateWithError($templatePath, $errorCaption, $errorMessage);
+    $pageContent = showTemplateWithMessage($templatePath, $messageCaption, $message);
     $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
     dumpAndDie($layoutContent);
 }
@@ -679,27 +692,39 @@ function ifErrorMessage(string $templatePath, string $errorCaption, string $erro
  * @param array $mailConfig Ассоциативный массив с данными для доступа к SMTP-серверу и параметрами сообщения
  * @param array $recipient Ассоциативный массив с данными получателя в виде [e-mail => имя]
  * @param string $messageContent Сообщение с HTML форматированием
- * @return string $result E-mail рассылка
+ * @return array $result E-mail рассылка
  */
-function sendMail(array $mailConfig, array $recipient, string $messageContent)
+function mailSendMessage(array $mailConfig, array $recipient, string $messageContent): array
 {
-    // Конфигурация транспорта, отвечает за способ отправки. Содержит параметры доступа к SMTP-серверу
-    $transport = (new Swift_SmtpTransport($mailConfig["domain"], $mailConfig["port"]))
-        ->setUsername($mailConfig["userName"])
-        ->setPassword($mailConfig["password"])
-        ->setEncryption($mailConfig["encryption"]);
+    try {
+        // Конфигурация транспорта, отвечает за способ отправки. Содержит параметры доступа к SMTP-серверу
+        $transport = (new Swift_SmtpTransport($mailConfig["domain"], $mailConfig["port"]))
+            ->setUsername($mailConfig["userName"])
+            ->setPassword($mailConfig["password"])
+            ->setEncryption($mailConfig["encryption"]);
 
-    // Объект библиотеки SwiftMailer, отвечает за отправку сообщений. Передаём туда созданный объект с SMTP-сервером
-    $mailer = new Swift_Mailer($transport);
+        // Объект библиотеки SwiftMailer, отвечает за отправку сообщений. Передаём туда созданный объект с SMTP-сервером
+        $mailer = new Swift_Mailer($transport);
 
-    // Формирование сообщения. Содержит параметры сообщения: текст, тему, отправителя и получателя
-    $message = (new Swift_Message($mailConfig["subject"]))
-        ->setFrom([$mailConfig["userName"] => $mailConfig["userCaption"]])
-        ->setBcc($recipient)
-        ->setBody($messageContent, "text/html");
+        // Формирование сообщения. Содержит параметры сообщения: текст, тему, отправителя и получателя
+        $message = (new Swift_Message($mailConfig["subject"]))
+            ->setFrom([$mailConfig["userName"] => $mailConfig["userCaption"]])
+            ->setBcc($recipient)
+            ->setBody($messageContent, "text/html");
 
-    // Отправка сообщения
-    $result = $mailer->send($message);
+        // Отправка сообщения
+        $result = [
+            "success" => 1,
+            "message" => $mailer->send($message)
+        ];
+    }
+    catch (Exception $ex) {
+        $result = [
+            "success" => 0,
+            "errorCaption" => "Возникла ошибка при отправке рассылки",
+            "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
+        ];
+    }
 
     return $result;
 }

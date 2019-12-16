@@ -799,6 +799,10 @@ a:focus {
   background: transparent url("../img/icon-error.png") no-repeat 0 50%;
 }
 
+.content__main-message {
+  color: #f84646;
+}
+
 /**
 Добавлено для шаблона «Страницы-заглушки» — off.php
  */
