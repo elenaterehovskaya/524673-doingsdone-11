@@ -1,95 +1,95 @@
 <?php
 require_once("config.php");
-require_once("init.php");
 
-// Проверяем подключение и выполняем запросы
-if ($link === false) {
-    // Ошибка подключения к MySQL
-    $error_string = mysqli_connect_error();
-}
-else {
-    // Страница запрошена методом POST
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        // В массиве $user будут все значения полей из массива POST
-        $user = $_POST;
+$title = "Дела в порядке | Регистрация аккаунта";
 
-        // ВАЛИДАЦИЯ ФОРМЫ
-        // Список обязательных к заполнению полей
-        $required = ["email", "password", "name"];
-        $errors = [];
+// Если сайт находится в неактивном состоянии, выходим на страницу с сообщением о техническом обслуживании
+ifSiteDisabled($config, $templatePath, $title);
 
-        $rules = [
-            "email" => function($value) {
-                return validateEmail($value);
-            },
-            "name" => function($value) {
-                return validateLength($value, 4, 20);
-            }
-        ];
+// Подключение к MySQL
+$link = mysqlConnect($mysqlConfig);
 
-        // Применяем функции валидации ко всем полям формы. Результат работы функций записывается в массив ошибок
-        foreach ($user as $key => $value) {
-            if (isset($rules[$key])) {
-                $rule = $rules[$key];
-                $errors[$key] = $rule($value);
-            }
-            // В этом же цикле проверяем заполнены ли обязательные поля. Результат записывается в массив ошибок
-            if (in_array($key, $required) && empty($value)) {
-                $errors[$key] = "Это поле должно быть заполнено";
-            }
+// Проверяем наличие ошибок подключения к MySQL и выводим их в шаблоне
+ifMysqlConnectError($link, $config, $title, $templatePath, $errorCaption, $errorDefaultMessage);
+
+$link = $link["link"];
+
+// ПОЛУЧАЕМ из полей формы необходимые данные от пользователя, ПРОВЕРЯЕМ их и СОХРАНЯЕМ в БД
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $user = $_POST;
+
+    $requiredFields = ["email", "password", "name"];
+    $validErrors = [];
+
+    $validRules = [
+        "email" => function ($value) {
+            return validateEmail($value);
+        },
+        "password" => function ($value) use ($config) {
+            return validateLength($value,
+                $config["registerLengthRules"]["password"]["min"],
+                $config["registerLengthRules"]["password"]["max"]
+            );
+        },
+        "name" => function ($value) use ($config) {
+            return validateLength($value,
+                $config["registerLengthRules"]["name"]["min"],
+                $config["registerLengthRules"]["name"]["max"]
+            );
+        }
+    ];
+
+    foreach ($user as $key => $value) {
+        if (isset($validRules[$key])) {
+            $rule = $validRules[$key];
+            $validErrors[$key] = $rule($value);
         }
 
-        // Данный массив в итоге отфильтровываем, чтобы удалить пустые значения и оставить только сообщения об ошибках
-        $errors = array_filter($errors);
-
-        if (empty($errors)) {
-            // Проверяем существование пользователя с email из формы в таблице пользователей в базе данных
-            $email = mysqli_real_escape_string($link, $user["email"]); // Экранирует специальные символы в строке
-            $sql = "SELECT id FROM users WHERE email = '$email'";
-            $result = mysqli_query($link, $sql);
-            if ($result === false) {
-                // Ошибка при выполнении SQL запроса
-                $error_string = mysqli_error($link);
-            }
-            else {
-                if (mysqli_num_rows($result) > 0) {
-                    $errors["email"] = "Указанный email уже используется другим пользователем";
-                }
-                else {
-                    // Добавим нового пользователя в БД. Чтобы не хранить пароль в открытом виде преобразуем его в хеш
-                    $password = password_hash($user["password"], PASSWORD_DEFAULT);
-
-                    $sql = "INSERT INTO users (email, name, password) VALUES (?, ?, ?)";
-                    $stmt = dbGetPrepareStmt($link, $sql, [$user["email"], $user["name"], $password]);
-                    $result = mysqli_stmt_execute($stmt);
-                    if ($result === false) {
-                        // Ошибка при выполнении SQL запроса
-                        $error_string = mysqli_error($link);
-                    }
-                    else {
-                        // Если запрос выполнен успешно, переадресовываем пользователя на главную страницу
-                        header("Location: auth.php");
-                        exit();
-                    }
-                }
-            }
+        if (in_array($key, $requiredFields) && empty($value)) {
+            $validErrors[$key] = "Это поле должно быть заполнено";
         }
+    }
+
+    if (isset($user["email"]) && !$validErrors["email"]) {
+        $email = mysqli_real_escape_string($link, $user["email"]);
+
+        // Поиск в базе данных в таблице users уже используемого e-mail
+        $email = dbGetEmail($link, $email);
+        if ($email["success"] === 0) {
+            $email["errorMessage"] = $errorDefaultMessage;
+            $pageContent = showTemplateWithError($templatePath, $errorCaption, $email["errorMessage"]);
+            $layoutContent = showTemplateLayoutGuest($templatePath, $pageContent, $config, $title);
+            dumpAndDie($layoutContent);
+        }
+
+        if ($email["count"] > 0) {
+            $validErrors["email"] = "Указанный e-mail уже используется другим пользователем";
+        }
+    }
+
+    // Массив отфильтровываем, чтобы удалить пустые значения и оставить только сообщения об ошибках
+    $validErrors = array_filter($validErrors);
+
+    if (empty($validErrors)) {
+        // Добавим нового пользователя в БД. Чтобы не хранить пароль в открытом виде преобразуем его в хеш
+        $password = password_hash($user["password"], PASSWORD_DEFAULT);
+
+        $user = dbInsertUser($link, [$user["email"], $user["name"], $password]);
+        if ($user["success"] === 0) {
+            $user["errorMessage"] = $errorDefaultMessage;
+            $pageContent = showTemplateWithError($templatePath, $errorCaption, $user["errorMessage"]);
+            $layoutContent = showTemplateLayoutGuest($templatePath, $pageContent, $config, $title);
+            dumpAndDie($layoutContent);
+        }
+
+        header("Location: index.php");
+        exit();
     }
 }
 
-if ($error_string) {
-    showMysqliError($page_content, $tpl_path, $error_string);
-}
-else {
-    showValidErrorRegister($page_content, $tpl_path, $errors);
-}
-
-// Подключаем «Лейаут» и передаём: HTML-код основного содержимого страницы и title для страницы
-$layout_content = includeTemplate($tpl_path . "layout.php", [
-    "content" => $page_content,
-    "user" => [],
-    "title" => "Дела в порядке | Регистрация аккаунта",
-    "config" => $config
+$pageContent = includeTemplate($templatePath . "form-register.php", [
+    "validErrors" => $validErrors
 ]);
 
-print($layout_content);
+$layoutContent = showTemplateLayoutGuest($templatePath, $pageContent, $config, $title);
+print($layoutContent);

@@ -1,265 +1,233 @@
 <?php
-require_once("init.php");
+require_once("config.php");
 
-// Если пользователь не вошёл в систему (т.е. нет о нем информации в сессии), переходим на гостевую страницу и выходим
 if (!isset($_SESSION["user"])) {
     header("location: /guest.php");
-    exit;
+    exit();
 }
 
+$title = "Дела в порядке";
 $user = $_SESSION["user"];
-$user_id = $_SESSION["user"]["id"];
+$userId = intval($_SESSION["user"]["id"]);
 
-// Проверяем подключение и выполняем запросы
-if ($link === false) {
-    // Ошибка подключения к MySQL
-    $error_string = mysqli_connect_error();
+// Если сайт находится в неактивном состоянии, выходим на страницу с сообщением о техническом обслуживании
+ifSiteDisabled($config, $templatePath, $title);
+
+// Подключение к MySQL
+$link = mysqlConnect($mysqlConfig);
+
+// Проверяем наличие ошибок подключения к MySQL и выводим их в шаблоне
+ifMysqlConnectError($link, $config, $title, $templatePath, $errorCaption, $errorDefaultMessage);
+
+$link = $link["link"];
+$projects = [];
+$tasks = [];
+
+// Список проектов у текущего пользователя
+$projects = dbGetProjects($link, $userId);
+if ($projects["success"] === 0) {
+    $projects["errorMessage"] = $errorDefaultMessage;
+    $pageContent = showTemplateWithError($templatePath, $errorCaption, $projects["errorMessage"]);
+    $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
+    dumpAndDie($layoutContent);
 }
-else {
-    // SQL-запрос для получения списка проектов у текущего пользователя
-    $sql = "SELECT id, name FROM projects WHERE user_id = " . $user_id;
-    $result = mysqli_query($link, $sql);
 
-    if ($result === false) {
-        // Ошибка при выполнении SQL запроса
-        $error_string = mysqli_error($link);
+$projects = $projects["data"];
+
+// Список всех задач у текущего пользователя
+$tasksAll = dbGetTasks($link, $userId);
+if ($tasksAll["success"] === 0) {
+    $tasksAll["errorMessage"] = $errorDefaultMessage;
+    $pageContent = showTemplateWithError($templatePath, $errorCaption, $tasksAll["errorMessage"]);
+    $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
+    dumpAndDie($layoutContent);
+}
+
+$tasksAll = $tasksAll["data"];
+
+// Список всех задач у текущего пользователя для каждого проекта
+$tasks = dbGetTasks($link, $userId);
+if ($tasks["success"] === 0) {
+    $tasks["errorMessage"] = $errorDefaultMessage;
+    $pageContent = showTemplateWithError($templatePath, $errorCaption, $tasks["errorMessage"]);
+    $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
+    dumpAndDie($layoutContent);
+}
+
+$tasks = $tasks["data"];
+$tasks = addHoursUntilEndTask($tasks);
+
+if (isset($_GET["project_id"])) {
+    $projectId = intval($_GET["project_id"]);
+
+    $tasks = dbGetTasksProject($link, $projectId, $userId);
+    if ($tasks["success"] === 0) {
+        $tasks["errorMessage"] = $errorDefaultMessage;
+        $pageContent = showTemplateWithError($templatePath, $errorCaption, $tasks["errorMessage"]);
+        $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
+        dumpAndDie($layoutContent);
     }
-    else {
-        // Получаем список проектов у текущего пользователя в виде двумерного массива
-        $projects = mysqli_fetch_all($result, MYSQLI_ASSOC);
-    }
 
-    // Проверяем для нашего текущего ID проекта из адресной строки его существование в наших проектах
-    if (isset($_GET["id"])) {
-        $project_id = intval($_GET["id"]);
-        $weFindProject = false;
-
-        foreach ($projects as $key => $value) {
-            if ($project_id === $value["id"]) {
-                $weFindProject = true;
-                break;
-            }
+    // Проверяем для текущего ID проекта из адресной строки его существование в массиве проектов
+    $currentProjectId = false;
+    foreach ($projects as $key => $value) {
+        if ($projectId === $value["id"]) {
+            $currentProjectId = true;
+            break;
         }
-
-        if ($weFindProject === false) {
-            // Ошибка: значения параметра запроса не существует
-            http_response_code(404);
-            $error_string = "Не найдено проекта с таким ID!";
-        }
     }
 
-    // SQL-запрос для получения списка из всех задач у текущего пользователя без привязки к проекту
-    $sql = <<<SQL
-    SELECT t.id, t.user_id, p.name AS project, t.title
-    FROM tasks t
-    LEFT JOIN projects p ON t.project_id = p.id 
-    LEFT JOIN users u ON t.user_id = u.id
-    WHERE t.user_id = $user_id
-SQL;
-    $result = mysqli_query($link, $sql);
-
-    if ($result === false) {
-        // Ошибка при выполнении SQL запроса
-        $error_string = mysqli_error($link);
-    }
-    else {
-        // Получаем список из всех задач у текущего пользователя без привязки к проекту в виде двумерного массива
-        $all_tasks = mysqli_fetch_all($result, MYSQLI_ASSOC);
-    }
-
-    // SQL-запрос для получения списка всех задач у текущего пользователя
-    $sql = <<<SQL
-    SELECT t.id, t.user_id, p.name AS project, t.title, t.file, t.deadline, t.status
-    FROM tasks t
-    LEFT JOIN projects p ON t.project_id = p.id
-    LEFT JOIN users u ON t.user_id = u.id
-    WHERE t.user_id = $user_id
-SQL;
-
-    if (isset($_GET["id"])) {
-        $project_id = intval($_GET["id"]);
-        $sql .= " and p.id = $project_id ORDER BY t.id DESC";
-    }
-    else {
-        $sql .= " ORDER BY t.id DESC";
-    }
-    $result = mysqli_query($link, $sql);
-    $records_count = mysqli_num_rows($result);
-
-    if ($result === false) {
-        // Ошибка при выполнении SQL запроса
-        $error_string = mysqli_error($link);
-    }
-    else if (isset($_GET["id"]) && $records_count == 0) {
+    if ($currentProjectId === false) {
         http_response_code(404);
-        $error_string = "Не найдено ни одной задачи для данного проекта!";
-    }
-    else {
-        // Получаем список из всех задач у текущего пользователя в виде двумерного массива
-        $tasks = mysqli_fetch_all($result, MYSQLI_ASSOC);
-        // Добавляем в массив кол-во часов, оставшихся до даты окончания выполнения задач
-        $tasks = addHoursUntilEnd2Tasks($tasks);
+        $message = "Не найдено проекта с таким ID";
+        ifErrorResultSearch($templatePath, $messageCaption, $message, $title, $user);
     }
 
-    // Список задач, найденных по поисковому запросу с использование FULLTEXT поиска MySQL
-    $search = "";
-    $tasks_serch = [];
-
-    if (isset($_GET["q"])) {
-        $search = trim(htmlspecialchars($_GET["q"]));
+    if ($tasks["count"] == 0) {
+        http_response_code(404);
+        $message = "Не найдено ни одной задачи для данного проекта";
+        ifErrorResultSearch($templatePath, $messageCaption, $message, $title, $user);
     }
+
+    $tasks = $tasks["data"];
+    $tasks = addHoursUntilEndTask($tasks);
+}
+
+// Список задач, найденных по поисковому запросу с использование FULLTEXT поиска MySQL
+$search = "";
+$searchTasks = [];
+
+if (isset($_GET["query"])) {
+    $search = trim($_GET["query"]);
 
     if ($search) {
-        $sql = <<<SQL
-        SELECT t.id, t.user_id, p.id AS project_id, p.name AS project, t.title
-        FROM tasks t
-        LEFT JOIN projects p ON t.project_id = p.id
-        LEFT JOIN users u ON t.user_id = u.id
-        WHERE t.user_id = $user_id and MATCH(title) AGAINST(?); 
-SQL;
-        $stmt = dbGetPrepareStmt($link, $sql, [$search]);
-        mysqli_stmt_execute($stmt);
-        $result = mysqli_stmt_get_result($stmt);
-
-        if ($result === false) {
-            // Ошибка при выполнении SQL запроса
-            $error_string = mysqli_error($link);
-        }
-        else {
-            $tasks_search = mysqli_fetch_all($result, MYSQLI_ASSOC);
-            $records_count = mysqli_num_rows($result);
+        $searchTasks = dbGetSearchTasks($link, $userId, [$search]);
+        if ($searchTasks["success"] === 0) {
+            $searchTasks["errorMessage"] = $errorDefaultMessage;
+            $pageContent = showTemplateWithError($templatePath, $errorCaption, $searchTasks["errorMessage"]);
+            $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
+            dumpAndDie($layoutContent);
         }
 
-        if ($records_count == 0) {
-            $search_message  = "Ничего не найдено по вашему запросу";
-        }
-    }
-
-    // Смена статуса выполнения задачи
-    $task_id = "";
-    $task_status = [];
-
-    if (isset($_GET["task_id"])) {
-        $task_id = intval($_GET["task_id"]);
-    }
-
-    if ($task_id) {
-        $sql = "SELECT id, status FROM tasks WHERE id = $task_id and user_id = " . $user_id;
-        $result = mysqli_query($link, $sql);
-
-        if ($result === false) {
-            // Ошибка при выполнении SQL запроса
-            $error_string = mysqli_error($link);
-        }
-        else {
-            $task_status = mysqli_fetch_assoc($result);
+        if ($searchTasks["count"] == 0) {
+            http_response_code(404);
+            $searchTasksMessage = "Ничего не найдено по вашему запросу";
         }
 
-        if (isset($task_status["status"]))  {
-            if ($task_status["status"] === 0) {
-                $sql = "UPDATE tasks SET status = 1 WHERE id = $task_id and user_id = " . $user_id;
-                $result = mysqli_query($link, $sql);
-            }
-            else if ($task_status["status"] === 1) {
-                $sql = "UPDATE tasks SET status = 0 WHERE id = $task_id and user_id = " . $user_id;
-                $result = mysqli_query($link, $sql);
-            }
-
-            if ($result === false) {
-                // Ошибка при выполнении SQL запроса
-                $error_string = mysqli_error($link);
-            }
-            else {
-                header("Location: index.php");
-                exit();
-            }
-        }
-    }
-
-    // Блок фильтров, состоящий из ссылок для быстрой фильтрации задач
-    $filter = $_GET;
-
-    if (isset($_GET["show_completed"])) {
-        $show_complete_tasks    = $_GET["show_completed"];
-        $_GET["show_completed"] = intval(!(intval($_GET["show_completed"])));
-    }
-
-    $scriptname = pathinfo(__FILE__, PATHINFO_BASENAME);
-    $query = http_build_query($_GET);
-    $url = "/" . $scriptname . "?" . $query;
-
-    if (isset($filter["f"])) {
-        if ($filter["f"] == "today") {
-            // SQL-запрос для получения списка задач «Повестка дня»
-            $sql = <<<SQL
-    SELECT t.id, t.user_id, p.name AS project, t.title, t.file, t.deadline, t.status
-    FROM tasks t
-    LEFT JOIN projects p ON t.project_id = p.id
-    LEFT JOIN users u ON t.user_id = u.id
-    WHERE DATE(t.deadline) = DATE(NOW()) and t.user_id = $user_id
-SQL;
-            $result = mysqli_query($link, $sql);
-            if ($result === false) {
-                // Ошибка при выполнении SQL запроса
-                $error_string = mysqli_error($link);
-            }
-        }
-
-        if ($filter["f"] == "tomorrow") {
-            // SQL-запрос для получения списка задач на «Завтра»
-            $sql = <<<SQL
-    SELECT t.id, t.user_id, p.name AS project, t.title, t.file, t.deadline, t.status
-    FROM tasks t
-    LEFT JOIN projects p ON t.project_id = p.id
-    LEFT JOIN users u ON t.user_id = u.id
-    WHERE DATE (t.deadline) = DATE(DATE_ADD(NOW(), INTERVAL 24 HOUR)) and t.user_id = $user_id
-SQL;
-            $result = mysqli_query($link, $sql);
-            if ($result === false) {
-                // Ошибка при выполнении SQL запроса
-                $error_string = mysqli_error($link);
-            }
-        }
-
-        if ($filter["f"] == "past") {
-            // SQL-запрос для получения списка «Просроченные»
-            $sql = <<<SQL
-    SELECT t.id, t.user_id, p.name AS project, t.title, t.file, t.deadline, t.status
-    FROM tasks t
-    LEFT JOIN projects p ON t.project_id = p.id
-    LEFT JOIN users u ON t.user_id = u.id
-    WHERE DATE(t.deadline) < DATE(NOW()) and t.user_id = $user_id
-SQL;
-            $result = mysqli_query($link, $sql);
-            if ($result === false) {
-                // Ошибка при выполнении SQL запроса
-                $error_string = mysqli_error($link);
-            }
-        }
-        $tasks = mysqli_fetch_all($result, MYSQLI_ASSOC);
-        $tasks = addHoursUntilEnd2Tasks($tasks);
+        $searchTasks = $searchTasks["data"];
     }
 }
 
-if ($error_string) {
-    showMysqliError($page_content, $tpl_path, $error_string);
-}
-else {
-    $page_content = includeTemplate($tpl_path . "main.php", [
-        "show_complete_tasks" => $show_complete_tasks,
-        "url" => $url,
-        "projects" => $projects,
-        "all_tasks" => $all_tasks,
-        "tasks" => $tasks,
-        "tasks_search" => $tasks_search,
-        "search_message" => $search_message
-    ]);
+// Блок сортировки задач (задачи на сегодня, на завтра, просроченные)
+$url = "";
+$urlLink = "";
+
+if (isset($_GET["show_completed"])) {
+    $showCompleteTasks = intval($_GET["show_completed"]);
+    $_GET["show_completed"] = intval(!($showCompleteTasks));
 }
 
-$layout_content = includeTemplate($tpl_path . "layout.php", [
-    "content" => $page_content,
-    "user" => $user,
-    "title" => "Дела в порядке"
+// Возвращает информацию о path в виде ассоциативного массива
+$scriptName = pathinfo(__FILE__, PATHINFO_BASENAME);
+// Преобразует ассоциативный массив в строку запроса
+$query = http_build_query($_GET);
+$url = "/" . $scriptName . "?" . $query;
+
+if (mb_strpos($url, "show_completed") === false) {
+    $reverseCompleteTasks = intval(!$showCompleteTasks);
+    $urlLink = "&show_completed=$reverseCompleteTasks";
+}
+
+$filter = $_GET;
+$filterWhiteList = ["today", "tomorrow", "past"];
+
+if (isset($filter["tab"]) && in_array($filter["tab"], $filterWhiteList)) {
+    $tasks = dbGetFilterTasks($link, $userId, $filter);
+    if ($tasks["success"] === 0) {
+        $tasks["errorMessage"] = $errorDefaultMessage;
+        $pageContent = showTemplateWithError($templatePath, $errorCaption, $tasks["errorMessage"]);
+        $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
+        dumpAndDie($layoutContent);
+    }
+
+    $tasks = $tasks["data"];
+    $tasks = addHoursUntilEndTask($tasks);
+}
+
+// Смена статуса выполнения задачи (выполнена -> не выполнена, не выполнена -> выполнена)
+$taskId = "";
+$taskStatus = [];
+$tabs = "";
+
+// Для сохранения состояния блоков фильтров, выбранных пользователем
+if (isset($_GET["tab"]) && in_array($_GET["tab"], $filterWhiteList)) {
+    $tabs .= "&tab=" . $_GET["tab"];
+}
+
+if (isset($_GET["task_id"])) {
+    $taskId = intval($_GET["task_id"]);
+
+    $statusTask = dbGetStatusTask($link, $taskId, $userId);
+    if ($statusTask["success"] === 0) {
+        $statusTask["errorMessage"] = $errorDefaultMessage;
+        $pageContent = showTemplateWithError($templatePath, $errorCaption, $statusTask["errorMessage"]);
+        $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
+        dumpAndDie($layoutContent);
+    }
+
+    $statusTask = $statusTask["data"];
+
+    if (isset($statusTask["status"])) {
+        $status = 0;
+        if ($statusTask["status"] === 0) {
+            $status = 1;
+        }
+
+        $changeStatusTask = dbChangeStatusTask($link, $status, $taskId, $userId);
+        if ($changeStatusTask["success"] === 0) {
+            $changeStatusTask["errorMessage"] = $errorDefaultMessage;
+            $pageContent = showTemplateWithError($templatePath, $errorCaption, $changeStatusTask["errorMessage"]);
+            $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
+            dumpAndDie($layoutContent);
+        }
+
+        $redirectTab = "";
+
+        if (isset($_GET["tab"]) && in_array($_GET["tab"], $filterWhiteList)) {
+            $redirectTab .= "?tab=" . $_GET["tab"];
+        }
+
+        $redirectTabPart = "&";
+        if ($redirectTab === "") {
+            $redirectTabPart = "?";
+        }
+
+        $redirectTab .= "{$redirectTabPart}show_completed=$showCompleteTasks";
+
+        $headerLocation = "Location: index.php";
+        if ($redirectTab !== "") {
+            $headerLocation .= $redirectTab;
+        }
+
+        header($headerLocation);
+        exit();
+    }
+}
+
+$showCompleteTasksUrl = "&show_completed=$showCompleteTasks";
+
+$pageContent = includeTemplate($templatePath . "main.php", [
+    "tasks" => $tasks,
+    "projects" => $projects,
+    "tasksAll" => $tasksAll,
+    "searchTasks" => $searchTasks,
+    "searchTasksMessage" => $searchTasksMessage,
+    "tabs" => $tabs,
+    "url" => $url,
+    "urlLink" => $urlLink,
+    "showCompleteTasks" => $showCompleteTasks,
+    "showCompleteTasksUrl" => $showCompleteTasksUrl
 ]);
 
-print($layout_content);
+$layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
+print($layoutContent);

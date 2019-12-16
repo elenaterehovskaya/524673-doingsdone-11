@@ -4,23 +4,25 @@
 <head>
     <meta charset="UTF-8">
     <title><?= $title; ?></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="Веб-приложение для удобного ведения списка дел">
     <link rel="stylesheet" href="/css/normalize.css">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/flatpickr.min.css">
 </head>
 
-<?php $classname = !isset($user) ? "body-background" : ""; ?>
+<?php $className = !isset($user) ? "body-background" : ""; ?>
+<body class="<?= $className; ?>">
 
-<body class="<?= $classname; ?>">
 <h1 class="visually-hidden">Дела в порядке</h1>
 
 <div class="page-wrapper">
-    <?php $classname = isset($user) ? "container--with-sidebar" : ""; ?>
 
-    <div class="container <?= $classname; ?>">
+    <?php $className = isset($user) ? "container--with-sidebar" : ""; ?>
+    <div class="container <?= $className; ?>">
+
         <?php if (!isset($_SESSION["user"])): ?>
             <header class="main-header">
-                <!-- ссылка всегда должна вести на корень сайта -->
                 <a href="/">
                     <img src="../img/logo.png" width="153" height="42" alt="Логитип Дела в порядке">
                 </a>
@@ -30,8 +32,8 @@
                         <a class="main-header__side-item button button--transparent" href="/auth.php">Войти</a>
                     </div>
                 <?php endif; ?>
-
             </header>
+
         <?php else: ?>
             <header class="main-header">
                 <a href="/index.php">
@@ -39,9 +41,9 @@
                 </a>
                 <div class="main-header__side">
                     <a class="main-header__side-item button button--plus open-modal" href="/add-task.php">Добавить задачу</a>
-
                     <div class="main-header__side-item user-menu">
-                        <img class="user-menu__photo" src="/img/user-pic.jpg" width="40" height="40" alt="Фото пользователя">
+                        <img class="user-menu__photo" src="/img/user-pic.jpg" width="40" height="40"
+                             alt="Фото пользователя">
                         <div class="user-menu__data">
                             <p><?= strip_tags($_SESSION["user"]["name"]); ?></p>
                             <a href="/logout.php">Выйти</a>
@@ -51,7 +53,7 @@
             </header>
         <?php endif; ?>
 
-        <div class="content"><?= $content; ?></div>
+        <div class="content"><?= $pageContent; ?></div>
     </div>
 </div>
 
@@ -59,13 +61,13 @@
     <div class="container">
         <div class="main-footer__copyright">
             <p>© 2019, «Дела в порядке»</p>
-
             <p>Веб-приложение для удобного ведения списка дел.</p>
         </div>
 
         <?php if (isset($_SESSION["user"])): ?>
             <a class="main-footer__button button button--plus" href="/add-task.php">Добавить задачу</a>
         <?php endif; ?>
+
         <div class="main-footer__social social">
             <span class="visually-hidden">Мы в соцсетях:</span>
             <a class="social__link social__link--facebook" href="#">

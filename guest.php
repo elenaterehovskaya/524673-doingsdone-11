@@ -1,23 +1,17 @@
 <?php
-require_once('config.php');
-require_once("data.php");
-require_once("functions.php");
+require_once("config.php");
 
-// Подключаем шаблон «Гостевой страницы»
-if (isset($config["enable"])) {
-    if ($config["enable"]) {
-        $page_content = includeTemplate(($config["tpl_path"] . "guest.php"), []);
-    }
-    else {
-        $page_content = includeTemplate(($config["tpl_path"] . "off.php"), []);
-    }
-}
+$title = "Дела в порядке | Гостевая страница";
 
-// Подключаем «Лейаут» и передаём: HTML-код основного содержимого страницы и title для страницы
-$layout_content = includeTemplate($tpl_path . "layout.php", [
-    "content" => $page_content,
-    "title" => "Дела в порядке | Гостевая страница",
-    "config" => $config // проброс переменной $config
+// Если сайт находится в неактивном состоянии, выходим на страницу с сообщением о техническом обслуживании
+ifSiteDisabled($config, $templatePath, $title);
+
+$pageContent = includeTemplate(($config["templatePath"] . "guest.php"), []);
+
+$layoutContent = includeTemplate($templatePath . "layout.php", [
+    "pageContent" => $pageContent,
+    "config" => $config,
+    "title" => $title
 ]);
 
-print($layout_content);
+print($layoutContent);
