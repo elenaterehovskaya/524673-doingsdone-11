@@ -17,7 +17,7 @@ ifSiteDisabled($config, $templatePath, $title);
 $link = mysqlConnect($mysqlConfig);
 
 // Проверяем наличие ошибок подключения к MySQL и выводим их в шаблоне
-ifMysqlConnectError($link, $config, $title, $templatePath);
+ifMysqlConnectError($link, $config, $title, $templatePath, $errorCaption, $errorDefaultMessage);
 
 $link = $link["link"];
 $projects = [];
@@ -26,7 +26,8 @@ $tasks = [];
 // Список проектов у текущего пользователя
 $projects = dbGetProjects($link, $userId);
 if ($projects["success"] === 0) {
-    $pageContent = showTemplateWithError($templatePath, $projects["errorCaption"], $projects["errorMessage"]);
+    $projects["errorMessage"] = $errorDefaultMessage;
+    $pageContent = showTemplateWithError($templatePath, $errorCaption, $projects["errorMessage"]);
     $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
     dumpAndDie($layoutContent);
 }
@@ -36,7 +37,8 @@ $projects = $projects["data"];
 // Список всех задач у текущего пользователя
 $tasksAll = dbGetTasks($link, $userId);
 if ($tasksAll["success"] === 0) {
-    $pageContent = showTemplateWithError($templatePath, $tasksAll["errorCaption"], $tasksAll["errorMessage"]);
+    $tasksAll["errorMessage"] = $errorDefaultMessage;
+    $pageContent = showTemplateWithError($templatePath, $errorCaption, $tasksAll["errorMessage"]);
     $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
     dumpAndDie($layoutContent);
 }
@@ -46,7 +48,8 @@ $tasksAll = $tasksAll["data"];
 // Список всех задач у текущего пользователя для каждого проекта
 $tasks = dbGetTasks($link, $userId);
 if ($tasks["success"] === 0) {
-    $pageContent = showTemplateWithError($templatePath, $tasks["errorCaption"], $tasks["errorMessage"]);
+    $tasks["errorMessage"] = $errorDefaultMessage;
+    $pageContent = showTemplateWithError($templatePath, $errorCaption, $tasks["errorMessage"]);
     $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
     dumpAndDie($layoutContent);
 }
@@ -59,7 +62,8 @@ if (isset($_GET["project_id"])) {
 
     $tasks = dbGetTasksProject($link, $projectId, $userId);
     if ($tasks["success"] === 0) {
-        $pageContent = showTemplateWithError($templatePath, $tasks["errorCaption"], $tasks["errorMessage"]);
+        $tasks["errorMessage"] = $errorDefaultMessage;
+        $pageContent = showTemplateWithError($templatePath, $errorCaption, $tasks["errorMessage"]);
         $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
         dumpAndDie($layoutContent);
     }
@@ -99,8 +103,8 @@ if (isset($_GET["query"])) {
     if ($search) {
         $searchTasks = dbGetSearchTasks($link, $userId, [$search]);
         if ($searchTasks["success"] === 0) {
-            $pageContent = showTemplateWithError($templatePath, $searchTasks["errorCaption"],
-                $searchTasks["errorMessage"]);
+            $searchTasks["errorMessage"] = $errorDefaultMessage;
+            $pageContent = showTemplateWithError($templatePath, $errorCaption, $searchTasks["errorMessage"]);
             $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
             dumpAndDie($layoutContent);
         }
@@ -140,7 +144,8 @@ $filterWhiteList = ["today", "tomorrow", "past"];
 if (isset($filter["tab"]) && in_array($filter["tab"], $filterWhiteList)) {
     $tasks = dbGetFilterTasks($link, $userId, $filter);
     if ($tasks["success"] === 0) {
-        $pageContent = showTemplateWithError($templatePath, $tasks["errorCaption"], $tasks["errorMessage"]);
+        $tasks["errorMessage"] = $errorDefaultMessage;
+        $pageContent = showTemplateWithError($templatePath, $errorCaption, $tasks["errorMessage"]);
         $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
         dumpAndDie($layoutContent);
     }
@@ -163,9 +168,9 @@ if (isset($_GET["task_id"])) {
     $taskId = intval($_GET["task_id"]);
 
     $statusTask = dbGetStatusTask($link, $taskId, $userId);
-    if ($statusTask ["success"] === 0) {
-        $pageContent = showTemplateWithError($templatePath, $statusTask["errorCaption"],
-            $statusTask["errorMessage"]);
+    if ($statusTask["success"] === 0) {
+        $statusTask["errorMessage"] = $errorDefaultMessage;
+        $pageContent = showTemplateWithError($templatePath, $errorCaption, $statusTask["errorMessage"]);
         $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
         dumpAndDie($layoutContent);
     }
@@ -180,8 +185,8 @@ if (isset($_GET["task_id"])) {
 
         $changeStatusTask = dbChangeStatusTask($link, $status, $taskId, $userId);
         if ($changeStatusTask["success"] === 0) {
-            $pageContent = showTemplateWithError($templatePath, $changeStatusTask["errorCaption"],
-                $changeStatusTask["errorMessage"]);
+            $changeStatusTask["errorMessage"] = $errorDefaultMessage;
+            $pageContent = showTemplateWithError($templatePath, $errorCaption, $changeStatusTask["errorMessage"]);
             $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
             dumpAndDie($layoutContent);
         }

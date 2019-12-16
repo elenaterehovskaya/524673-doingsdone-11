@@ -10,7 +10,7 @@ ifSiteDisabled($config, $templatePath, $title);
 $link = mysqlConnect($mysqlConfig);
 
 // Проверяем наличие ошибок подключения к MySQL и выводим их в шаблоне
-ifMysqlConnectError($link, $config, $title, $templatePath);
+ifMysqlConnectError($link, $config, $title, $templatePath, $errorCaption, $errorDefaultMessage);
 
 $link = $link["link"];
 
@@ -56,7 +56,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Поиск в базе данных в таблице users уже используемого e-mail
         $email = dbGetEmail($link, $email);
         if ($email["success"] === 0) {
-            $pageContent = showTemplateWithError($templatePath, $email["errorCaption"], $email["errorMessage"]);
+            $email["errorMessage"] = $errorDefaultMessage;
+            $pageContent = showTemplateWithError($templatePath, $errorCaption, $email["errorMessage"]);
             $layoutContent = showTemplateLayoutGuest($templatePath, $pageContent, $config, $title);
             dumpAndDie($layoutContent);
         }
@@ -75,7 +76,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $user = dbInsertUser($link, [$user["email"], $user["name"], $password]);
         if ($user["success"] === 0) {
-            $pageContent = showTemplateWithError($templatePath, $user["errorCaption"], $user["errorMessage"]);
+            $user["errorMessage"] = $errorDefaultMessage;
+            $pageContent = showTemplateWithError($templatePath, $errorCaption, $user["errorMessage"]);
             $layoutContent = showTemplateLayoutGuest($templatePath, $pageContent, $config, $title);
             dumpAndDie($layoutContent);
         }

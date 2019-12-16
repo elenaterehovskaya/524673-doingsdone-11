@@ -17,14 +17,15 @@ ifSiteDisabled($config, $templatePath, $title);
 $link = mysqlConnect($mysqlConfig);
 
 // Проверяем наличие ошибок подключения к MySQL и выводим их в шаблоне
-ifMysqlConnectError($link, $config, $title, $templatePath);
+ifMysqlConnectError($link, $config, $title, $templatePath, $errorCaption, $errorDefaultMessage);
 
 $link = $link["link"];
 
 // Список проектов у текущего пользователя
 $projects = dbGetProjects($link, $userId);
 if ($projects["success"] === 0) {
-    $pageContent = showTemplateWithError($templatePath, $projects["errorCaption"], $projects["errorMessage"]);
+    $projects["errorMessage"] = $errorDefaultMessage;
+    $pageContent = showTemplateWithError($templatePath, $errorCaption, $projects["errorMessage"]);
     $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
     dumpAndDie($layoutContent);
 }
@@ -34,7 +35,8 @@ $projects = $projects["data"];
 // Список всех задач у текущего пользователя
 $tasksAll = dbGetTasks($link, $userId);
 if ($tasksAll["success"] === 0) {
-    $pageContent = showTemplateWithError($templatePath, $tasksAll["errorCaption"], $tasksAll["errorMessage"]);
+    $tasksAll["errorMessage"] = $errorDefaultMessage;
+    $pageContent = showTemplateWithError($templatePath, $errorCaption, $tasksAll["errorMessage"]);
     $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
     dumpAndDie($layoutContent);
 }
@@ -160,7 +162,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Добавление новой задачи
     $task = dbInsertTask($link, $userId, $task);
     if ($task["success"] === 0) {
-        $pageContent = showTemplateWithError($templatePath, $task["errorCaption"], $task["errorMessage"]);
+        $task["errorMessage"] = $errorDefaultMessage;
+        $pageContent = showTemplateWithError($templatePath, $errorCaption, $task["errorMessage"]);
         $layoutContent = showTemplateLayout($templatePath, $pageContent, $title, $user);
         dumpAndDie($layoutContent);
     }

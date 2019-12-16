@@ -8,14 +8,14 @@ $title = "Дела в порядке | Отправка e-mail рассылки"
 $link = mysqlConnect($mysqlConfig);
 
 // Проверяем наличие ошибок подключения к MySQL и выводим их в шаблоне
-ifMysqlConnectError($link, $config, $title, $templatePath);
+ifMysqlConnectError($link, $config, $title, $templatePath, $errorCaption, $errorDefaultMessage);
 
 $link = $link["link"];
 
 // Список ID пользователей, у которых есть невыполненные задачи, срок выполнения которых равен текущему дню
 $usersIds = dbGetUsersIds($link);
 if ($usersIds["success"] === 0) {
-    $pageContent = showTemplateWithError($templatePath, $usersIds["errorCaption"], $usersIds["errorMessage"]);
+    $pageContent = showTemplateWithError($templatePath, $errorCaption, $usersIds["errorMessage"]);
     $layoutContent = showTemplateLayoutGuest($templatePath, $pageContent, $config, $title);
     dumpAndDie($layoutContent);
 }
@@ -33,7 +33,7 @@ foreach ($usersIds as $value) {
     // Список невыполненных задач для каждого найденного пользователя
     $tasksUser = dbGetTasksUser($link, $value["user_id"]);
     if ($tasksUser["success"] === 0) {
-        $pageContent = showTemplateWithError($templatePath, $tasksUser["errorCaption"], $tasksUser["errorMessage"]);
+        $pageContent = showTemplateWithError($templatePath, $errorCaption, $tasksUser["errorMessage"]);
         $layoutContent = showTemplateLayoutGuest($templatePath, $pageContent, $config, $title);
         dumpAndDie($layoutContent);
     }
@@ -60,8 +60,7 @@ foreach ($usersIds as $value) {
 
     $mailSendResult = mailSendMessage($yandexMailConfig, $recipient, $messageContent);
     if ($mailSendResult["success"] === 0) {
-        $pageContent = showTemplateWithError($templatePath, $mailSendResult["errorCaption"],
-            $mailSendResult["errorMessage"]);
+        $pageContent = showTemplateWithError($templatePath, $errorCaption, $mailSendResult["errorMessage"]);
         $layoutContent = showTemplateLayoutGuest($templatePath, $pageContent, $config, $title);
         dumpAndDie($layoutContent);
     }

@@ -49,7 +49,6 @@ function mysqlConnect(array $mysqlConfig): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка подключения к MySQL",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -84,11 +83,19 @@ function ifSiteDisabled(array $config, string $templatePath, string $title)
  * @param array $config Двумерный массив с параметрами сайта
  * @param string $title Название страницы сайта
  * @param string $templatePath Путь к папке с шаблонами
+ * @param string $errorCaption Заголовок ошибки
+ * @param string $errorDefaultMessage Текст ошибки
  */
-function ifMysqlConnectError(array $link, array $config, string $title, string $templatePath)
-{
+function ifMysqlConnectError(
+    array $link,
+    array $config,
+    string $title,
+    string $templatePath,
+    string $errorCaption,
+    string $errorDefaultMessage
+) {
     if ($link["success"] === 0) {
-        $pageContent = showTemplateWithError($templatePath, $link["errorCaption"], $link["errorMessage"]);
+        $pageContent = showTemplateWithError($templatePath, $errorCaption, $errorDefaultMessage);
         $layoutContent = showTemplateLayoutGuest($templatePath, $pageContent, $config, $title);
         dumpAndDie($layoutContent);
     }
@@ -165,7 +172,6 @@ function dbGetEmail($link, string $email): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -191,7 +197,6 @@ function dbInsertUser($link, array $data = []): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -218,7 +223,6 @@ function dbGetUser($link, string $email): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -246,7 +250,6 @@ function dbGetProjects($link, int $userId): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -273,7 +276,6 @@ function dbInsertProject($link, int $userId, array $data = []): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -307,7 +309,6 @@ SQL;
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -334,7 +335,6 @@ function dbInsertTask($link, int $userId, array $data = []): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -369,7 +369,6 @@ SQL;
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -406,7 +405,6 @@ SQL;
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -465,7 +463,6 @@ SQL;
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -493,7 +490,6 @@ function dbGetStatusTask($link, int $taskId, int $userId): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -518,7 +514,6 @@ function dbChangeStatusTask($link, int $status, int $taskId, int $userId): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -545,7 +540,6 @@ function dbGetUsersIds($link): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -572,7 +566,6 @@ function dbGetTasksUser($link, int $value): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -599,7 +592,6 @@ function dbGetDataUser($link, int $value): array
     } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Ошибка при выполнении SQL-запроса",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }
@@ -715,13 +707,11 @@ function mailSendMessage(array $mailConfig, array $recipient, string $messageCon
         // Отправка сообщения
         $result = [
             "success" => 1,
-            "message" => $mailer->send($message)
+            "mailerMessage" => $mailer->send($message)
         ];
-    }
-    catch (Exception $ex) {
+    } catch (Exception $ex) {
         $result = [
             "success" => 0,
-            "errorCaption" => "Возникла ошибка при отправке рассылки",
             "errorMessage" => implode(" | ", [$ex->getLine(), $ex->getMessage(), $ex->getCode()])
         ];
     }

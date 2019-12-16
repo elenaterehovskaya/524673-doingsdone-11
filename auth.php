@@ -10,7 +10,7 @@ ifSiteDisabled($config, $templatePath, $title);
 $link = mysqlConnect($mysqlConfig);
 
 // Проверяем наличие ошибок подключения к MySQL и выводим их в шаблоне
-ifMysqlConnectError($link, $config, $title, $templatePath);
+ifMysqlConnectError($link, $config, $title, $templatePath, $errorCaption, $errorDefaultMessage);
 
 $link = $link["link"];
 
@@ -41,7 +41,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Поиск в базе данных в таблице users пользователя с переданным e-mail
             $user = dbGetUser($link, $email);
             if ($user["success"] === 0) {
-                $pageContent = showTemplateWithError($templatePath, $user["errorCaption"], $user["errorMessage"]);
+                $user["errorMessage"] = $errorDefaultMessage;
+                $pageContent = showTemplateWithError($templatePath, $errorCaption, $user["errorMessage"]);
                 $layoutContent = showTemplateLayoutGuest($templatePath, $pageContent, $config, $title);
                 dumpAndDie($layoutContent);
             }
