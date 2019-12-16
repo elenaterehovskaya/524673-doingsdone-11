@@ -783,7 +783,7 @@ a:focus {
 }
 
 /**
-Добавлено для шаблона «Ошибки» — error.php
+Добавлено для информационного шаблона — inform.php
  */
 .content__main-heading--error {
   font-size: 22px;
