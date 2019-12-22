@@ -30,7 +30,6 @@ if ($projects["success"] === 0) {
     dumpAndDie($layoutContent);
 }
 
-
 $projects = $projects["data"];
 
 // Список всех задач у текущего пользователя

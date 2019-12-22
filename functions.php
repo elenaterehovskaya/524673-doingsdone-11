@@ -639,7 +639,7 @@ function showTemplateWithMessage(string $templatePath, string $messageCaption, s
  */
 function showTemplateLayout(string $templatePath, string $pageContent, string $title, array $user = [])
 {
-    return $layoutContent = includeTemplate($templatePath . "layout.php", [
+    return includeTemplate($templatePath . "layout.php", [
         "pageContent" => $pageContent,
         "title" => $title,
         "user" => $user
@@ -650,13 +650,13 @@ function showTemplateLayout(string $templatePath, string $pageContent, string $t
  * Показывает шаблон лейаута для НЕзарегистрированного пользователя
  * @param string $templatePath Путь к папке с шаблонами
  * @param string $pageContent Содержание контентной части
- * @param array $config Массив с параметрами сайта
+ * @param array $config Двумерный массив с параметрами сайта
  * @param string $title Название страницы сайта
  * @return string HTML контент
  */
 function showTemplateLayoutGuest(string $templatePath, string $pageContent, array $config, string $title)
 {
-    return $layoutContent = includeTemplate($templatePath . "layout.php", [
+    return includeTemplate($templatePath . "layout.php", [
         "pageContent" => $pageContent,
         "config" => $config,
         "title" => $title,
